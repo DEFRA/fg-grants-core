@@ -1,0 +1,50 @@
+services:
+  localstack:
+    image: localstack/localstack:4.3.0
+    ports:
+      - "4566:4566"
+    env_file:
+      - "compose/aws.env"
+    environment:
+      DEBUG: 1
+      LS_LOG: DEBUG
+      SERVICES: sqs,sns
+      LOCALSTACK_HOST: 127.0.0.1
+    volumes:
+      - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
+      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
+    networks:
+      - cdp-tenant
+
+  mongodb:
+    image: mongo:6.0.13
+    networks:
+      - cdp-tenant
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data
+    restart: always
+
+  entra:
+    image: defradigital/fg-entra-stub-frontend:0.11.0
+    ports:
+      - "3010:3010"
+    networks:
+      - cdp-tenant
+
+  redis:
+    image: redis:7.2.3-alpine3.18
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - cdp-tenant
+
+
+volumes:
+  mongodb-data:
+
+networks:
+  cdp-tenant:
+    driver: bridge
