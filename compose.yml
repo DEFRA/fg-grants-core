@@ -11,7 +11,7 @@ services:
       SERVICES: sqs,sns
       LOCALSTACK_HOST: 127.0.0.1
     volumes:
-      - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
+      - ./tmp/localstack:/var/lib/localstack"
       - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
     networks:
       - cdp-tenant
@@ -24,7 +24,6 @@ services:
       - "27017:27017"
     volumes:
       - mongodb-data:/data
-    restart: always
 
   entra:
     image: defradigital/fg-entra-stub-frontend:0.11.0
@@ -37,10 +36,8 @@ services:
     image: redis:7.2.3-alpine3.18
     ports:
       - "6379:6379"
-    restart: always
     networks:
       - cdp-tenant
-
 
 volumes:
   mongodb-data:
