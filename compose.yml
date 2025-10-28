@@ -18,12 +18,44 @@ services:
 
   mongodb:
     image: mongo:6.0.13
+    container_name: mongodb
     networks:
       - cdp-tenant
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT:-27017}:27017"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --eval 'db.runCommand({ping:1}).ok' || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command:
+      ["mongod", "--replSet", "mongoRepl", "--bind_ip", "0.0.0.0"]
     volumes:
       - mongodb-data:/data
+
+  mongo-ready:
+    image: mongo:6.0.13
+    container_name: "mongo-ready"
+    networks: [cdp-tenant]
+    environment:
+      PRIMARY: "mongodb:27017"
+      REPLSET: "mongoRepl"
+    volumes:
+      - ./scripts/wait-for-replicaset.sh:/wait-for-replicaset.sh:ro
+    entrypoint: ["/bin/bash", "/wait-for-replicaset.sh"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh 'mongodb://mongodb:27017/?directConnection=true' --quiet --eval 'db.hello().isWritablePrimary' | grep -q true || exit 1",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 60 
 
   entra:
     image: defradigital/fg-entra-stub-frontend:0.11.0
