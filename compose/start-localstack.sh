@@ -76,3 +76,4 @@ wait
 
 
 echo "SNS/SQS ready"
+
