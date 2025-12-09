@@ -64,7 +64,7 @@ function create_topic_and_queue() {
 }
 
 create_topic_and_queue "cw__sns__case_status_updated" "gas__sqs__update_status" &
-
+create_topic_and_queue "gas__sns__update_agreement_status" "update_agreement_status" &
 create_topic_and_queue "agreement_status_updated" "gas__sqs__update_agreement_status" &
 create_topic_and_queue "gas__sns__grant_application_created" "gas__sqs__handle_grant_application_created" &
 create_topic_and_queue "gas__sns__grant_application_status_updated" "gas__sqs__handle_grant_application_status_updated" &
