@@ -4,17 +4,21 @@ set -e
 
 function create_topic() {
   local topic_name=$1
-  local topic_arn=$(awslocal sns create-topic --name $topic_name --query "TopicArn" --output text)
+  local topic_arn=$(awslocal sns create-topic \
+	  --name $topic_name \
+	  --attributes '{ "FifoTopic":"true","ContentBasedDeduplication":"true"}' \
+	  --query "TopicArn" \
+	  --output text)
   echo $topic_arn
 }
 
 function create_queue() {
   local queue_name=$1
-
+  local base="${queue_name%%.fifo}"
   # Create the DLQ
   local dlq_url=$(
     awslocal sqs create-queue \
-    --queue-name "$queue_name-dead-letter-queue" \
+    --queue-name "$base-dead-letter-queue" \
     --query "QueueUrl" --output text
   )
 
@@ -30,7 +34,7 @@ function create_queue() {
   local queue_url=$(
     awslocal sqs create-queue \
       --queue-name $queue_name \
-      --attributes '{ "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$dlq_arn'\",\"maxReceiveCount\":\"1\"}" }' \
+      --attributes '{ "FifoQueue":"true", "ContentBasedDeduplication":"true", "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$dlq_arn'\",\"maxReceiveCount\":\"1\"}" }' \
       --query "QueueUrl" \
       --output text
   )
@@ -63,14 +67,16 @@ function create_topic_and_queue() {
   subscribe_queue_to_topic $topic_arn $queue_arn
 }
 
-create_topic_and_queue "cw__sns__case_status_updated" "gas__sqs__update_status" &
-create_topic_and_queue "gas__sns__update_agreement_status" "update_agreement_status" &
-create_topic_and_queue "agreement_status_updated" "gas__sqs__update_agreement_status" &
-create_topic_and_queue "gas__sns__grant_application_created" "gas__sqs__handle_grant_application_created" &
-create_topic_and_queue "gas__sns__grant_application_status_updated" "gas__sqs__handle_grant_application_status_updated" &
-create_topic_and_queue "gas__sns__create_new_case" "cw__sqs__create_new_case" &
-create_topic_and_queue "gas__sns__update_case_status" "cw__sqs__update_case_status" &
-create_topic_and_queue "gas__sns__create_agreement" "create_agreement" &
+create_topic_and_queue "cw__sns__case_status_updated_fifo.fifo" "gas__sqs__update_status_fifo.fifo" &
+create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agreement_status_fifo.fifo" &
+create_topic_and_queue "agreement_status_updated_fifo.fifo" "gas__sqs__update_agreement_status_fifo.fifo" &
+create_topic_and_queue "gas__sns__grant_application_created_fifo.fifo" "gas__sqs__handle_grant_application_created_fifo.fifo" &
+create_topic_and_queue "gas__sns__grant_application_status_updated_fifo.fifo" "gas__sqs__handle_grant_application_status_updated_fifo.fifo" &
+create_topic_and_queue "gas__sns__create_new_case_fifo.fifo" "cw__sqs__create_new_case_fifo.fifo" &
+create_topic_and_queue "gas__sns__update_case_status_fifo.fifo" "cw__sqs__update_case_status_fifo.fifo" &
+create_topic_and_queue "gas__sns__create_agreement_fifo.fifo" "create_agreement_fifo.fifo" &
+
+create_topic "gas__sns__update_agreement_status_fifo.fifo" &
 
 wait
 
