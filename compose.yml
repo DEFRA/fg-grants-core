@@ -58,7 +58,7 @@ services:
       retries: 60
 
   entra:
-    image: defradigital/fg-entra-stub-frontend:0.11.0
+    image: defradigital/fg-entra-stub-frontend:0.13.0
     ports:
       - "3010:3010"
     networks:
