@@ -20,7 +20,18 @@ Launch individual services:
 
 This repo handles the setting up of Entra stub, mongoDB and AWS localstack for Case Working and GAS.
 
-Because grants-core uses replicasets and a shared DB, to get things working end to end there's a little set up. 
+Because grants-core uses replicasets and a shared DB, to get things working end to end there's a little set up.
+
+These instructions work with the following repos in the same directory as `fg-grants-core`
+
+```
+/
+  /fg-grants-core
+  /fg-gas-backend
+  /fg-cw-backend
+  /fg-cw-frontend
+  ...
+```
 
 Make sure you have the latest:
 - [GAS](https://github.com/DEFRA/fg-gas-backend)
