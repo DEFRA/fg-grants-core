@@ -42,24 +42,24 @@ Make sure you have the latest:
 
 - `docker compose up`
 
-### GAS and CWBE
+### All other repos 
 
 - copy the contents of `.env.example` to `.env`
-- uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS
-- spin up ALL repos `npm run dev`
+- in GAS and CWBE uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS
+- spin up ALL repos (except `fg-grants-core`) `npm run dev`
 - for GAS and CWBE the migrations scripts will run and populate the db
 
 ### CWFE
 
 - access the frontend and log in `http://localhost:3000`
 - you probably won't see much - this sign in creates the user in the DB but we still need to add roles to the user so they can see and administer cases
-- username: readerwriter@t.gov.uk
-- password: pass
+- username: `readerwriter@t.gov.uk`
+- password: `pass`
 
 ### CWBE
 
-- update the user roles `node scripts/set-user-roles.js`
-- this script sets roles for the readerwriter user - you can update the script to add roles for other users as you require. The script has references to users - add to this map to edit other users.
+- update the user roles; run `node scripts/set-user-roles.js`
+- this script sets roles for the readerwriter user - you can update the script to add roles for other users as you require. The script has a map to users - add to this map to edit other users. You can get the idpId from the db after first login.
 
 ```javascript
 const users = {
@@ -71,10 +71,10 @@ const users = {
 
 ### GAS
 
-- create a local access token for the gas api
-- remove the query string from the connection string in `scripts/mint-access-token.js`
-- run `node --env-file=.env scripts/mint-access-token.js`
-- take note of the resulting access token - you can use this on Postman/Insomnia as the bearer token on the Authorization header
+- create a local access token for the gas api:
+  - remove the query string from the connection string in `scripts/mint-access-token.js`
+  - run `node --env-file=.env scripts/mint-access-token.js`
+  - take note of the resulting access token - you can use this on Postman/Insomnia as the bearer token on the Authorization header
 
 ### POST to the GAS 
 
