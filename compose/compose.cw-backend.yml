@@ -1,0 +1,3 @@
+include:
+  - path: ../fg-cw-backend/compose/compose.cw-backend.yml
+    project_directory: ../fg-cw-backend

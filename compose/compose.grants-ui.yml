@@ -1,0 +1,3 @@
+include:
+  - path: ../grants-ui/compose.yml
+    project_directory: ../grants-ui

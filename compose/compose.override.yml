@@ -1,0 +1,78 @@
+services:
+  localstack:
+    env_file:
+      - ../fg-grants-core/compose/aws.env
+    volumes:
+      - ../fg-grants-core/tmp/localstack:/var/lib/localstack
+      - ../fg-grants-core/compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
+    networks:
+      - cdp-tenant
+
+  mongodb:
+    image: mongo:7.0
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    command: ["mongod", "--replSet", "mongoRepl", "--bind_ip", "localhost,mongodb,127.0.0.1"]
+
+  mongo-ready:
+    image: mongo:7.0
+    volumes:
+      - ./compose/wait-for-replicaset.sh:/wait-for-replicaset.sh:ro
+    networks:
+      - cdp-tenant
+    environment:
+      PRIMARY: "mongodb:27017"
+      REPLSET: "mongoRepl"
+      RS_HOST: "mongodb:27017"
+    entrypoint: ["/bin/bash", "/wait-for-replicaset.sh"]
+
+  # Move services onto cdp-tenant network so they can reach each other
+  grants-ui:
+    profiles:
+      - grants-ui
+    networks:
+      - cdp-tenant
+    environment:
+      GAS_API_URL: http://gas:3200
+      # to mint a token see https://github.com/DEFRA/fg-gas-backend#minting-service-access-tokens
+      GAS_API_AUTH_TOKEN: <mint_your_dev_token> 
+
+  grants-ui-backend:
+    profiles:
+      - grants-ui
+    networks:
+      - cdp-tenant
+
+  grants-ui-config-api:
+    profiles:
+      - grants-ui
+    networks:
+      - cdp-tenant
+
+  fcp-defra-id-stub:
+    profiles:
+      - grants-ui
+    networks:
+      - cdp-tenant
+
+  grants-ui-dal-stub:
+    profiles:
+      - grants-ui
+    networks:
+      - cdp-tenant
+
+  mockserver:
+    profiles:
+      - grants-ui
+    networks:
+      - cdp-tenant
+
+  gas:
+    networks:
+      - cdp-tenant
+
+volumes:
+  redis-data:
+  mongodb-data:
+  mongodb-config:

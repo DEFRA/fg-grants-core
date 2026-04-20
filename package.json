@@ -1,0 +1,21 @@
+{
+  "name": "fg-grants-core",
+  "version": "1.0.0",
+  "description": "Local infrastructure to aid development of grants services.",
+  "main": "index.js",
+  "scripts": {
+    "docker:up": "docker compose up --build -d",
+    "docker:up:cw": "docker compose -f compose.yml  -f compose/compose.gas.yml -f compose/compose.cw-backend.yml -f compose/compose.cw-frontend.yml -f compose/compose.override.yml up --build -d",
+    "docker:up:grants-ui": "docker compose -f compose.yml -f compose/compose.grants-ui.yml -f compose/compose.gas.yml -f compose/compose.cw-backend.yml -f compose/compose.cw-frontend.yml  -f compose/compose.override.yml --profile grants-ui up --build -d"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DEFRA/fg-grants-core.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DEFRA/fg-grants-core/issues"
+  },
+  "homepage": "https://github.com/DEFRA/fg-grants-core#readme"
+}

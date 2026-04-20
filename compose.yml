@@ -63,6 +63,14 @@ services:
       - "3010:3010"
     networks:
       - cdp-tenant
+    volumes:
+      - ./compose/entra-clients.js:/home/node/src/server/common/clients.js:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3010/jwks"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
 
   redis:
     image: redis:7.2.3-alpine3.18
