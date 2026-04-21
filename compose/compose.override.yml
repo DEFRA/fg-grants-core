@@ -34,7 +34,7 @@ services:
     networks:
       - cdp-tenant
     environment:
-      GAS_API_URL: http://gas:3200
+      GAS_API_URL: http://gas:3102
       # to mint a token see https://github.com/DEFRA/fg-gas-backend#minting-service-access-tokens
       GAS_API_AUTH_TOKEN: <mint_your_dev_token> 
 
