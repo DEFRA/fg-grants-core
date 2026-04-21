@@ -71,5 +71,8 @@ const users = {
   - checkout the readme on `fg-gas-backend` for instructions on [ways to mint an access token](https://github.com/DEFRA/fg-gas-backend#minting-service-access-tokens)
   - take note of the resulting access token - you can use this on Postman et-al as the Authorization bearer token.
 - with `grants-ui`, you will need to add the bearer token to the `GAS_API_AUTH_TOKEN` environment variable  for `grants-ui` service in `compose/compose-override.yml`
+- if running with the full docker compose set up then use the "run with manual env vars" (`MONGO_URI="mongodb://localhost:27017" MONGO_DATABASE=fg-gas-backend node scripts/mint-access-token.js`)
+- if you're just running core in docker and the other apps using npm then use with an env-file (`node --env-file=.env scripts/mint-access-token.js`)
+- if minting for grants-ui, you will need to stop and restart the grants-ui service.
 
 You should now be set up and able to see and work with cases in the Casw Working Frontend
