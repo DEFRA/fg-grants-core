@@ -13,7 +13,7 @@ services:
     volumes:
       - mongodb-data:/data/db
       - mongodb-config:/data/configdb
-    command: ["mongod", "--replSet", "mongoRepl", "--bind_ip", "localhost,mongodb,127.0.0.1"]
+    command: ["mongod", "--replSet", "mongoRepl", "--bind_ip_all"]
 
   mongo-ready:
     image: mongo:7.0
