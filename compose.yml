@@ -17,7 +17,7 @@ services:
       - cdp-tenant
 
   mongodb:
-    image: mongo:6.0.13
+    image: mongo:7.0
     container_name: mongodb
     networks:
       - cdp-tenant
@@ -38,12 +38,16 @@ services:
       - mongodb-data:/data
 
   mongo-ready:
-    image: mongo:6.0.13
+    image: mongo:7.0
     container_name: "mongo-ready"
+    depends_on:
+      mongodb:
+        condition: service_started
     networks: [cdp-tenant]
     environment:
       PRIMARY: "mongodb:27017"
       REPLSET: "mongoRepl"
+      RS_HOST: "localhost:27017"
     volumes:
       - ./compose/wait-for-replicaset.sh:/wait-for-replicaset.sh:ro
     entrypoint: ["/bin/bash", "/wait-for-replicaset.sh"]
