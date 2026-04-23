@@ -88,7 +88,7 @@ const users = {
 
 #### grants-ui
 
-- Run with manual env vars - `MONGO_URI="mongodb://localhost:27017" MONGO_DATABASE=fg-gas-backend node scripts/mint-access-token.js`
+- Run with manual env vars - `node --env-file=.env  scripts/mint-access-token.js`
 - When running `grants-ui` you need to add the bearer token as `GAS_API_AUTH_TOKEN` environment variable for `grants-ui` service in `compose/compose-override.yml`
   - Stop and restart the grants-ui service.
 - grants-ui should be available at `http://localhost:3000`
