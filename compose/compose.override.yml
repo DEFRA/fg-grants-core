@@ -72,6 +72,11 @@ services:
     networks:
       - cdp-tenant
 
+  fg-cw-frontend:
+    environment:
+      NODE_ENV: development
+      LOG_FORMAT: ecs
+
 volumes:
   redis-data:
   mongodb-data:
