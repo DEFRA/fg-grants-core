@@ -29,13 +29,13 @@
 
 ### Option 2: Running all case working apps
 
-- in `fg-grants-core` run `npm run docker:up:cw`
+- In `fg-grants-core` run `npm run docker:up:cw`
 - For GAS and cw-backend the migrations scripts will run and populate the db
 - If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
 
 ### Option 3: Running case working along with grants-ui
 
-- in `fg-grants-core` run `npm run docker:up:grants-ui`
+- In `fg-grants-core` run `npm run docker:up:grants-ui`
 - For GAS and cw-backend the migrations scripts will run and populate the db
 - If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
 
@@ -81,13 +81,16 @@ const users = {
 
 #### GAS via `docker compose`
 
-- 
+- In fg-gas-backend first make sure you have the fg-grants-core lines commented out in your .env
+- Then run `node --env-file=.env  scripts/mint-access-token.js`
+- Take note of the resulting access token and use this on Postman et-al as the Authorization bearer token.
+- You can now POST a new application to the GAS application endpoint.
 
 #### grants-ui
 
 - Run with manual env vars - `MONGO_URI="mongodb://localhost:27017" MONGO_DATABASE=fg-gas-backend node scripts/mint-access-token.js`
 - When running `grants-ui` you need to add the bearer token as `GAS_API_AUTH_TOKEN` environment variable for `grants-ui` service in `compose/compose-override.yml`
   - Stop and restart the grants-ui service.
-
+- grants-ui should be available at `http://localhost:3000`
 
 You should now be set up and able to see and work with cases in the Casw Working Frontend
