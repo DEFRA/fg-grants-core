@@ -23,7 +23,7 @@
 
 - In GAS and cw-backend .env file uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS
 - In `fg-grants-core` run `npm run docker:up`
-- Spin up other repos e.g. ~/code/fg-gas-backend `shell npm run dev`
+- Spin up other repos e.g. ~/code/fg-gas-backend `npm run dev`
 - For GAS and cw-backend the migrations scripts will run and populate the db
 - If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
 
@@ -93,4 +93,4 @@ const users = {
   - Stop and restart the grants-ui service.
 - grants-ui should be available at `http://localhost:3000`
 
-You should now be set up and able to see and work with cases in the Casw Working Frontend
+You should now be set up and able to see and work with cases in the Case Working Frontend
