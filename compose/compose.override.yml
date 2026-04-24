@@ -36,7 +36,7 @@ services:
     environment:
       GAS_API_URL: http://gas:3102
       # to mint a token see https://github.com/DEFRA/fg-gas-backend#minting-service-access-tokens
-      GAS_API_AUTH_TOKEN: <mint_your_dev_token> 
+      GAS_API_AUTH_TOKEN: 42e3b7ce-740c-4b5e-b551-76d8fe219d80
 
   grants-ui-backend:
     profiles:

@@ -90,7 +90,13 @@ const users = {
 
 - Run with manual env vars - `node --env-file=.env  scripts/mint-access-token.js`
 - When running `grants-ui` you need to add the bearer token as `GAS_API_AUTH_TOKEN` environment variable for `grants-ui` service in `compose/compose-override.yml`
-  - Stop and restart the grants-ui service.
+  - In Docker, stop and remove grants-ui then restart using `npm run docker:up:grants-ui` to rebuild grants-ui.
 - grants-ui should be available at `http://localhost:3000`
 
 You should now be set up and able to see and work with cases in the Case Working Frontend
+
+
+### Improvements/to-do
+
+- pre mint the gas token and store in an env file that grants-ui can pick up on build.
+- pre populate the cw-backend Users collection so we no longer have to run the additional script.
