@@ -88,10 +88,11 @@ const users = {
 
 #### grants-ui
 
+- Run `npm run generate:gas-token` This generates a new UUID/hash pair. You will then have to add these values to `compose/compose.override.yml` -> `grants-ui:GAS_API_AUTH_TOKEN` and `gas-token-setup:GAS_TOKEN_HASH` and restart the stack to apply.
 - Run `npm run docker:up:grants-ui` — the GAS bearer token is inserted into MongoDB automatically and passed to `grants-ui` via environment.
 - grants-ui should be available at `http://localhost:3000`
 
-To rotate the token (e.g. for use in Postman), run `npm run generate:gas-token`. This generates a new UUID/hash pair. You will then have tp update `compose/compose.override.yml` and `compose/gas-token-setup.sh` and restart the stack to apply.
+To rotate the token (e.g. for use in Postman), run `npm run generate:gas-token`.
 
 You should now be set up and able to see and work with cases in the Case Working Frontend
 
