@@ -27,16 +27,35 @@ services:
       RS_HOST: "mongodb:27017"
     entrypoint: ["/bin/bash", "/wait-for-replicaset.sh"]
 
+  gas-token-setup:
+    image: mongo:7.0
+    profiles:
+      - grants-ui
+    networks:
+      - cdp-tenant
+    volumes:
+      - ./compose/gas-token-setup.sh:/gas-token-setup.sh:ro
+    environment:
+      GAS_TOKEN_HASH: 7fe695dbd6905047b6b5c447211f705c54691915b28bf43f80035624192185f1
+    depends_on:
+      mongo-ready:
+        condition: service_healthy
+    command: sh /gas-token-setup.sh
+    restart: "no"
+
   # Move services onto cdp-tenant network so they can reach each other
   grants-ui:
     profiles:
       - grants-ui
     networks:
       - cdp-tenant
+    depends_on:
+      gas-token-setup:
+        condition: service_completed_successfully
     environment:
       GAS_API_URL: http://gas:3102
-      # to mint a token see https://github.com/DEFRA/fg-gas-backend#minting-service-access-tokens
-      GAS_API_AUTH_TOKEN: 42e3b7ce-740c-4b5e-b551-76d8fe219d80
+      GAS_API_AUTH_TOKEN: f6214ad7-4e4b-4e5b-baa3-e0f0eae97fe9
+      #<generate a token npm generate:gas-token> 
 
   grants-ui-backend:
     profiles:
