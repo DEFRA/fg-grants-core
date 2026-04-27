@@ -88,7 +88,8 @@ const users = {
 
 #### grants-ui
 
-- Run with manual env vars - `node --env-file=.env  scripts/mint-access-token.js`
+- Make sure mongo is running ...
+- In fg-gas-backend run `node --env-file=.env  scripts/mint-access-token.js`
 - When running `grants-ui` you need to add the bearer token as `GAS_API_AUTH_TOKEN` environment variable for `grants-ui` service in `compose/compose-override.yml`
   - In Docker, stop and remove grants-ui then restart using `npm run docker:up:grants-ui` to rebuild grants-ui.
 - grants-ui should be available at `http://localhost:3000`
