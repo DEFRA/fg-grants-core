@@ -71,7 +71,7 @@ const users = {
 
 - If you are planning to access `fg-gas-backend` api via postman or similar tooling or running `grants-ui` you'll need to generate a bearer auth token.
 
-#### GAS via `npm run`
+#### Auth token for GAS via `npm run`
 
 - Create a local access token for the gas api:
   - if running fg-grants-core in docker and the other apps using `npm run` then in fg-gas-backend run `MONGO_URI="mongodb://localhost:27017" MONGO_DATABASE=fg-gas-backend node scripts/mint-access-token.js`
@@ -79,23 +79,23 @@ const users = {
   - Take note of the resulting access token and use this on Postman et-al as the Authorization bearer token.
   - You can now POST a new application to the GAS application endpoint.
 
-#### GAS via `docker compose`
+#### Auth token for GAS via `docker compose`
 
 - In fg-gas-backend first make sure you have the fg-grants-core lines commented out in your .env
 - Then run `node --env-file=.env  scripts/mint-access-token.js`
 - Take note of the resulting access token and use this on Postman et-al as the Authorization bearer token.
 - You can now POST a new application to the GAS application endpoint.
 
-#### grants-ui
+#### Auth token for grants-ui
 
-- Make sure mongo is running ...
+- Make sure mongo is running ... `npm run docker:up:grants-ui`
 - In fg-gas-backend run `node --env-file=.env  scripts/mint-access-token.js`
 - When running `grants-ui` you need to add the bearer token as `GAS_API_AUTH_TOKEN` environment variable for `grants-ui` service in `compose/compose-override.yml`
   - In Docker, stop the containers and remove grants-ui then restart using `npm run docker:up:grants-ui` to rebuild grants-ui.
 - grants-ui should be available at `http://localhost:3000`
 - e.g. sign in to grants-ui with CRN 1300000069 and password "pass" then choose the second land parcel in the list when you reach the land parcel page.
 
-You should now be set up and able to see and work with cases in the Case Working Frontend
+You should now be set up and able to see and work with cases in the Case Working Frontend and Grants-ui
 
 
 ### Improvements/to-do
