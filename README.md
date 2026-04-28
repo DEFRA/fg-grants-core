@@ -21,7 +21,7 @@
 
 ### Option 1: Running one or more farming grants applications using `npm run`
 
-- In GAS and cw-backend .env file uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS
+- In GAS and cw-backend .env file uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS. **Only** use these vars if you're running up the case working apps using `npm run dev`.
 - In `fg-grants-core` run `npm run docker:up`
 - Spin up other repos e.g. ~/code/fg-gas-backend `npm run dev`
 - For GAS and cw-backend the migrations scripts will run and populate the db
@@ -91,8 +91,9 @@ const users = {
 - Make sure mongo is running ...
 - In fg-gas-backend run `node --env-file=.env  scripts/mint-access-token.js`
 - When running `grants-ui` you need to add the bearer token as `GAS_API_AUTH_TOKEN` environment variable for `grants-ui` service in `compose/compose-override.yml`
-  - In Docker, stop and remove grants-ui then restart using `npm run docker:up:grants-ui` to rebuild grants-ui.
+  - In Docker, stop the containers and remove grants-ui then restart using `npm run docker:up:grants-ui` to rebuild grants-ui.
 - grants-ui should be available at `http://localhost:3000`
+- e.g. sign in to grants-ui with CRN 1300000069 and password "pass" then choose the second land parcel in the list when you reach the land parcel page.
 
 You should now be set up and able to see and work with cases in the Case Working Frontend
 
