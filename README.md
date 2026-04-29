@@ -21,7 +21,7 @@
 
 ### Option 1: Running one or more farming grants applications using `npm run`
 
-- In GAS and cw-backend .env file uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS. **Only** use these vars if you're running up the case working apps using `npm run dev`.
+- In GAS and cw-backend .env file uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS. **Only** use these vars if you're using this option - i.e. running up the case working apps using `npm run dev`.
 - In `fg-grants-core` run `npm run docker:up`
 - Spin up other repos e.g. ~/code/fg-gas-backend `npm run dev`
 - For GAS and cw-backend the migrations scripts will run and populate the db
@@ -40,6 +40,7 @@
 - In `fg-grants-core` run `npm run docker:up:cw`
 - For GAS and cw-backend the migrations scripts will run and populate the db
 - If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
+- **In GAS and cw-backend .env file comment out the "fg-grants-core" lines**
 
 #### Auth token for GAS via `docker compose` (option 2)
 
@@ -53,6 +54,7 @@
 - In `fg-grants-core` run `npm run docker:up:grants-ui`
 - For GAS and cw-backend the migrations scripts will run and populate the db
 - If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
+- **In GAS and cw-backend .env file comment out the "fg-grants-core" lines**
 
 #### Auth token for grants-ui (option 3)
 
