@@ -17,7 +17,7 @@
 
 - In all cases, you need to make sure you have git pulled the latest of each app.
 - Checked that your `.env.example` matches what you have in `.env` or copied over the configuration.
-- Run ```shell npm install``` in each directory.
+- Run ```npm install``` in each directory.
 
 ### Option 1: Running one or more farming grants applications using `npm run`
 
@@ -71,7 +71,7 @@
   - username: `readerwriter@t.gov.uk`
   - password: `pass`
 - Users will have general access to the case working frontend but will need specicfic roles to administer cases so you probably won't see much - this sign in creates the user in the DB but we still need to add roles to the user.
-- In `fg-cw-backend` add user roles by running ```shell node scripts/set-user-roles.js```
+- In `fg-cw-backend` add user roles by running ```node scripts/set-user-roles.js```
 - You should get a response like 
 ```
 Setting user roles.
