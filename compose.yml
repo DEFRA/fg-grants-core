@@ -35,7 +35,7 @@ services:
     command:
       ["mongod", "--replSet", "mongoRepl", "--bind_ip", "0.0.0.0"]
     volumes:
-      - mongodb-data:/data
+      - mongodb-data:/data/db
 
   mongo-ready:
     image: mongo:7.0
