@@ -17,10 +17,12 @@
 
 - In all cases, you need to make sure you have git pulled the latest of each app.
 - Checked that your `.env.example` matches what you have in `.env` or copied over the configuration.
-- Run ```
+- Run in each directory.
+
+```
 nvm use
 npm install
-``` in each directory.
+``` 
 
 ### Option 1: Running one or more farming grants applications using `npm run`
 
