@@ -8,11 +8,11 @@ services:
     environment:
       DEBUG: 1
       LS_LOG: DEBUG
-      SERVICES: sqs,sns
+      SERVICES: s3,sqs,sns
       LOCALSTACK_HOST: 127.0.0.1
     volumes:
       - ./tmp/localstack:/var/lib/localstack"
-      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
+      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack-core.sh
     networks:
       - cdp-tenant
 
@@ -62,6 +62,7 @@ services:
       retries: 60
 
   entra:
+    container_name: entra
     image: defradigital/fg-entra-stub-frontend:0.13.0
     ports:
       - "3010:3010"
@@ -88,4 +89,5 @@ volumes:
 
 networks:
   cdp-tenant:
+    name: cdp-tenant
     driver: bridge
