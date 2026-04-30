@@ -1,28 +1,8 @@
 # fg-grants-core
 
-Local infrastructure to aid development of grants services.
-
-## Getting started - quick start
-
-Launch infra components via Docker Compose:
-
-```
-docker compose up -d
-```
-
-Launch individual services:
-
-```
-~/code/fg-gas-backend > npm run dev
-```
-
-## Setting up
-
-This repo handles the setting up of Entra stub, mongoDB and AWS localstack for Case Working and GAS.
-
-Because grants-core uses replicasets and a shared DB, to get things working end to end there's a little set up.
-
-These instructions work with the following repos in the same directory as `fg-grants-core`
+- This repo handles the infrastructure set up Entra stub, mongoDB, redis, and AWS localstack for Case Working and GAS.
+- It abstracts the core dependencies and runs them in docker using `compose up` commands.
+- These instructions work with the Farming grants repos ([fg-gas-backend (GAS)](https://github.com/DEFRA/fg-gas-backend), [fg-cw-backend](https://github.com/DEFRA/fg-cw-backend) and [fg-cw-frontend](https://github.com/DEFRA/fg-cw-frontend)) in the same directory.
 
 ```
 /
@@ -30,36 +10,79 @@ These instructions work with the following repos in the same directory as `fg-gr
   /fg-gas-backend
   /fg-cw-backend
   /fg-cw-frontend
-  ...
+  /grants-ui (optional)
 ```
 
-Make sure you have the latest:
-- [GAS](https://github.com/DEFRA/fg-gas-backend)
-- [Case working backend (CWBE)](https://github.com/DEFRA/fg-cw-backend)
-- [Case working frontend (CWFE)](https://github.com/DEFRA/fg-cw-frontend)
+### Standard set up (same for each option)
 
-### fg-grants-core
+- In all cases, you need to make sure you have git pulled the latest of each app.
+- Checked that your `.env.example` matches what you have in `.env` or copied over the configuration.
+- Run ```
+nvm use
+npm install
+``` in each directory.
 
-- `docker compose up`
+### Option 1: Running one or more farming grants applications using `npm run`
 
-### All other repos 
+- In GAS and cw-backend .env file uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS. **Only** use these vars if you're using this option - i.e. running up the case working apps using `npm run dev`.
+- In `fg-grants-core` run `npm run docker:up`
+- Spin up other repos e.g. ~/code/fg-gas-backend `npm run dev`
+- For GAS and cw-backend the migrations scripts will run and populate the db
+- If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
 
-- copy the contents of `.env.example` to `.env`
-- in GAS and CWBE uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS
-- spin up ALL repos (except `fg-grants-core`) `npm run dev`
-- for GAS and CWBE the migrations scripts will run and populate the db
+#### Auth token for GAS via `npm run` (option 1)
 
-### CWFE
+- Create a local access token for the gas api:
+  - if running fg-grants-core in docker and the other apps using `npm run` then in fg-gas-backend run `MONGO_URI="mongodb://localhost:27017" MONGO_DATABASE=fg-gas-backend node scripts/mint-access-token.js`
+  - Checkout the readme on `fg-gas-backend` for more information on [ways to mint an access token](https://github.com/DEFRA/fg-gas-backend#minting-service-access-tokens)
+  - Take note of the resulting access token and use this on Postman et-al as the Authorization bearer token.
+  - You can now POST a new application to the GAS application endpoint.
 
-- access the frontend and log in `http://localhost:3000`
-- you probably won't see much - this sign in creates the user in the DB but we still need to add roles to the user so they can see and administer cases
-- username: `readerwriter@t.gov.uk`
-- password: `pass`
+### Option 2: Running all case working apps
 
-### CWBE
+- In `fg-grants-core` run `npm run docker:up:cw`
+- For GAS and cw-backend the migrations scripts will run and populate the db
+- If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
+- **In GAS and cw-backend .env file comment out the "fg-grants-core" lines**
 
-- update the user roles; run `node scripts/set-user-roles.js`
-- this script sets roles for the readerwriter user - you can update the script to add roles for other users as you require. The script has a map to users - add to this map to edit other users. You can get the idpId from the db after first login.
+#### Auth token for GAS via `docker compose` (option 2)
+
+- In fg-gas-backend first make sure you have the fg-grants-core lines commented out in your .env
+- Then run `node --env-file=.env  scripts/mint-access-token.js`
+- Take note of the resulting access token and use this on Postman et-al as the Authorization bearer token.
+- You can now POST a new application to the GAS application endpoint.
+
+### Option 3: Running case working along with grants-ui
+
+- In `fg-grants-core` run `npm run docker:up:grants-ui`
+- For GAS and cw-backend the migrations scripts will run and populate the db
+- If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
+- **In GAS and cw-backend .env file comment out the "fg-grants-core" lines**
+
+#### Auth token for grants-ui (option 3)
+
+- Make sure mongo is running ... `npm run docker:up:grants-ui`
+- In fg-gas-backend run `node --env-file=.env  scripts/mint-access-token.js`
+- When running `grants-ui` you need to add the bearer token as `GAS_API_AUTH_TOKEN` environment variable for `grants-ui` service in `compose/compose-override.yml`
+  - In Docker, stop the containers and remove grants-ui then restart using `npm run docker:up:grants-ui` to rebuild grants-ui.
+- grants-ui should be available at `http://localhost:3000`
+- e.g. sign in to grants-ui with CRN 1300000069 and password "pass" then choose the second land parcel in the list when you reach the land parcel page.
+
+### Setting up user access
+
+- Access the frontend and log in `http://localhost:3100`
+  - username: `readerwriter@t.gov.uk`
+  - password: `pass`
+- Users will have general access to the case working frontend but will need specicfic roles to administer cases so you probably won't see much - this sign in creates the user in the DB but we still need to add roles to the user.
+- In `fg-cw-backend` add user roles by running ```node scripts/set-user-roles.js```
+- You should get a response like 
+```
+Setting user roles.
+User roles set.
+Setting user roles end.
+```
+- This script sets roles for the `readerwriter@t.gov.uk` user.
+- If you would like to use a different user you can update the script by adding users to the users map. Add to this map to edit other users. You can get the idpId from the fg-cw-backend db users collection once you have signed in with that user.
 
 ```javascript
 const users = {
@@ -69,15 +92,9 @@ const users = {
 };
 ```
 
-### GAS
+You should now be set up and able to see and work with cases in the Case Working Frontend and Grants-ui
 
-- create a local access token for the gas api:
-  - remove the query string from the connection string in `scripts/mint-access-token.js`
-  - run `node --env-file=.env scripts/mint-access-token.js`
-  - take note of the resulting access token - you can use this on Postman/Insomnia as the bearer token on the Authorization header
+### Improvements/to-do
 
-### POST to the GAS 
-
-- post to the GAS Application endpoint to create an Application in GAS and a resulting Case in Case Working
-
-You should now be set up and able to see and work with cases in the CWFE UI
+- pre mint the gas token and store in an env file that grants-ui can pick up on build.
+- pre populate the cw-backend Users collection so we no longer have to run the additional script.

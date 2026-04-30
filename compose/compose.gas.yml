@@ -1,0 +1,3 @@
+include:
+  - path: ../fg-gas-backend/compose/compose.gas.yml
+    project_directory: ../fg-gas-backend

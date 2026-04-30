@@ -1,0 +1,3 @@
+include:
+  - path: ../grants-ui/compose.land-grants.yml
+    project_directory: ../grants-ui
