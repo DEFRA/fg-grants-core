@@ -49,10 +49,11 @@ npm install
 
 #### Auth token for GAS via `docker compose` (option 2)
 
-- In fg-gas-backend first make sure you have the fg-grants-core lines commented out in your .env
-- Then run `node --env-file=.env  scripts/mint-access-token.js`
-- Take note of the resulting access token and use this on Postman et-al as the Authorization bearer token.
-- You can now POST a new application to the GAS application endpoint.
+- The GAS API access token is automatically seeded on `docker compose up`. Check the `gas-seed-token` container logs for the token and hash values:
+  ```
+  docker logs gas-seed-token
+  ```
+- Use the token as the Authorization bearer token in Postman et-al to POST to the GAS application endpoint.
 
 ### Option 3: Running case working along with grants-ui
 
@@ -63,10 +64,7 @@ npm install
 
 #### Auth token for grants-ui (option 3)
 
-- Make sure mongo is running ... `npm run docker:up:grants-ui`
-- In fg-gas-backend run `node --env-file=.env  scripts/mint-access-token.js`
-- When running `grants-ui` you need to add the bearer token as `GAS_API_AUTH_TOKEN` environment variable for `grants-ui` service in `compose/compose-override.yml`
-  - In Docker, stop the containers and remove grants-ui then restart using `npm run docker:up:grants-ui` to rebuild grants-ui.
+- The GAS API access token is automatically seeded on `docker compose up` and pre-configured as `GAS_API_AUTH_TOKEN` in `compose/compose.override.yml`.
 - grants-ui should be available at `http://localhost:3000`
 - e.g. sign in to grants-ui with CRN 1300000069 and password "pass" then choose the second land parcel in the list when you reach the land parcel page.
 
@@ -98,5 +96,4 @@ You should now be set up and able to see and work with cases in the Case Working
 
 ### Improvements/to-do
 
-- pre mint the gas token and store in an env file that grants-ui can pick up on build.
 - pre populate the cw-backend Users collection so we no longer have to run the additional script.
