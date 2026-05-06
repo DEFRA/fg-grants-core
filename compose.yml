@@ -61,23 +61,6 @@ services:
       timeout: 3s
       retries: 60
 
-  # Seeds the pre-minted dev token hash so grants-ui can authenticate with GAS
-  # without needing to run scripts/mint-access-token.js manually.
-  # Raw token (grants-ui: GAS_API_AUTH_TOKEN - see compose.override.yml): 42e3b7ce-740c-4b5e-b551-76d8fe219d80
-  gas-seed-token:
-    image: mongo:7.0
-    container_name: gas-seed-token
-    networks:
-      - cdp-tenant
-    depends_on:
-      mongo-ready:
-        condition: service_healthy
-    environment:
-      TOKEN_HASH: 6d47cf58709a210c8282b8124617c22bf5c5c22022d931e3f922115fe2ab2768
-    volumes:
-      - ./compose/seed-gas-token.sh:/seed-gas-token.sh:ro
-    entrypoint: ["/bin/bash", "/seed-gas-token.sh"]
-    restart: "no"
 
   entra:
     container_name: entra
