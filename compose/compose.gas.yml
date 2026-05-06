@@ -3,14 +3,6 @@ include:
     project_directory: ../fg-gas-backend
 
 services:
-  gas:
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-  
   # Seeds the pre-minted dev token hash so grants-ui can authenticate with GAS
   # without needing to run scripts/mint-access-token.js manually.
   # Raw token (grants-ui: GAS_API_AUTH_TOKEN - see compose.override.yml): f081263c-6876-4d40-936f-ebdf63b5e893
