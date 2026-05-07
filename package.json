@@ -6,7 +6,9 @@
   "scripts": {
     "docker:up": "docker compose up --build --watch",
     "docker:up:cw": "docker compose -f compose.yml  -f compose/compose.gas.yml -f compose/compose.cw-backend.yml -f compose/compose.cw-frontend.yml -f compose/compose.override.yml up --build --watch",
-    "docker:up:grants-ui": "docker compose -f compose.yml -f compose/compose.grants-ui.yml -f compose/compose.land-grants.yml -f compose/compose.gas.yml -f compose/compose.cw-backend.yml -f compose/compose.cw-frontend.yml  -f compose/compose.override.yml --profile grants-ui up --build"
+    "docker:up:grants-ui": "docker compose -f compose.yml -f compose/compose.grants-ui.yml -f compose/compose.land-grants.yml -f compose/compose.gas.yml -f compose/compose.cw-backend.yml -f compose/compose.cw-frontend.yml  -f compose/compose.override.yml --profile grants-ui up --build",
+    "docker:up:ext": "docker compose -f compose.yml -f compose/compose.grants-ui.yml -f compose/compose.land-grants.yml -f compose/compose.gas.yml -f compose/compose.cw-backend.yml -f compose/compose.cw-frontend.yml  -f compose/compose.agreements-api.yml -f compose/compose.override.yml --profile grants-ui --profile agreements up --build"
+
   },
   "repository": {
     "type": "git",
