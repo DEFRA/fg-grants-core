@@ -144,6 +144,15 @@ const users = {
 
 You should now be set up and able to see and work with cases in the Case Working Frontend and Grants-ui
 
+
+### Running the full stack
+
+If you're running the full stack there are still some caveats that you need to be aware of
+
+- See Auth token for grants-ui (option 3) for login details to grants-ui
+- Once you have submitted the application, log in to case working frontend - http://localhost:3100 (see Setting up user access)
+- Once you have a generated agreement you'll need to run ```node scripts/fix-local-agreements-url.js``` in fg-cw-backend to update the agreements-ui endpoint for local development if you want to view the agreement as a case-worker would. This is because the endpoint is hardcoded into the workflow definition for each env so points to a non-local environment.
+
 ### Improvements/to-do
 
 - pre populate the cw-backend Users collection so we no longer have to run the additional script.
