@@ -61,6 +61,7 @@ services:
       timeout: 3s
       retries: 60
 
+
   entra:
     container_name: entra
     image: defradigital/fg-entra-stub-frontend:0.13.0

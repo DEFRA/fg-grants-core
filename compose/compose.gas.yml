@@ -1,3 +1,26 @@
 include:
   - path: ../fg-gas-backend/compose/compose.gas.yml
     project_directory: ../fg-gas-backend
+
+services:
+  # Seeds the pre-minted dev token hash so grants-ui can authenticate with GAS
+  # without needing to run scripts/mint-access-token.js manually.
+  # Raw token (grants-ui: GAS_API_AUTH_TOKEN - see compose.override.yml): f081263c-6876-4d40-936f-ebdf63b5e893
+  gas-seed-token:
+    image: mongo:7.0
+    container_name: gas-seed-token
+    networks:
+      - cdp-tenant
+    depends_on:
+      mongo-ready:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      gas:
+        condition: service_healthy
+    environment:
+      TOKEN_HASH: 54cc2d5522a2d00a483f4b394a9e931fcf0dd48b97f8c43e780db071d3922c01
+    volumes:
+      - ./compose/seed-gas-token.sh:/seed-gas-token.sh:ro
+    entrypoint: ["/bin/bash", "/seed-gas-token.sh"]
+    restart: "no"

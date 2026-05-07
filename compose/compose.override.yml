@@ -36,8 +36,7 @@ services:
       - cdp-tenant
     environment:
       GAS_API_URL: http://gas:3102
-      # to mint a token see https://github.com/DEFRA/fg-gas-backend#minting-service-access-tokens
-      GAS_API_AUTH_TOKEN: 42e3b7ce-740c-4b5e-b551-76d8fe219d80
+      GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
 
   grants-ui-backend:
     profiles:
@@ -75,6 +74,12 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       AWS_ENDPOINT_URL: http://localstack:4566
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   fg-cw-backend:
     networks:
