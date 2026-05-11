@@ -94,6 +94,20 @@ The following additional SNS topics and SQS queues are created in localstack for
 | `fcp_audit_farming_grants_agreements_pdf` | topic |
 | `fcp_audit_grants_payment_service` | topic |
 
+
+### Option 5: Running with grants-config-broker (local development)
+
+Use this option when you need to work on grant configurations locally — adding new grants, updating config files, or testing the broker itself.
+
+- Check out `grants-config-broker` alongside this repo (see directory structure above).
+- In `fg-grants-core` run:
+  ```bash
+  npm run stack cw grants-ui config-broker
+  ```
+- The broker is built from your local `grants-config-broker` source and hot-reloads on file changes.
+- It is available at `http://localhost:3012`.
+- To add a new grant locally, create a directory under `grants-config-broker/compose/` following the `{grant-name}@{version}` format and register it in `grants-config-broker/compose/release.yml`. See the grants-config-broker README for details.
+
 ### Using the `stack` helper
 
 A `start-stack.js` script provides a shorthand for composing the right set of services without needing to remember the full `docker compose` command.
@@ -156,19 +170,9 @@ If you're running the full stack there are still some caveats that you need to b
 - Once you have submitted the application, log in to case working frontend - http://localhost:3100 (see Setting up user access)
 - Once you have a generated agreement you'll need to run ```node scripts/fix-local-agreements-url.js``` in fg-cw-backend to update the agreements-ui endpoint for local development if you want to view the agreement as a case-worker would. This is because the endpoint is hardcoded into the workflow definition for each env so points to a non-local environment.
 
-### Option 5: Running with grants-config-broker (local development)
 
-Use this option when you need to work on grant configurations locally — adding new grants, updating config files, or testing the broker itself.
-
-- Check out `grants-config-broker` alongside this repo (see directory structure above).
-- In `fg-grants-core` run:
-  ```bash
-  npm run stack cw grants-ui config-broker
-  ```
-- The broker is built from your local `grants-config-broker` source and hot-reloads on file changes.
-- It is available at `http://localhost:3012`.
-- To add a new grant locally, create a directory under `grants-config-broker/compose/` following the `{grant-name}@{version}` format and register it in `grants-config-broker/compose/release.yml`. See the grants-config-broker README for details.
 
 ### Improvements/to-do
 
 - pre populate the cw-backend Users collection so we no longer have to run the additional script.
+- check the agreements sqs/sns topics all work as expected. Agreements uses floci and the rest of the stack uses localstack so there may be some fine tuning required in porting over.
