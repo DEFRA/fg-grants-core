@@ -8,7 +8,7 @@ services:
     environment:
       DEBUG: 1
       LS_LOG: DEBUG
-      SERVICES: s3,sqs,sns
+      SERVICES: s3,sqs,sns,firehose
       LOCALSTACK_HOST: 127.0.0.1
     volumes:
       - ./tmp/localstack:/var/lib/localstack"

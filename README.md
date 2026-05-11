@@ -13,6 +13,7 @@
   /grants-ui (optional)
   /farming-grants-agreements-api (optional)
   /farming-grants-agreements-ui (optional)
+  /grants-config-broker (optional)
 ```
 
 ### Standard set up (same for each option)
@@ -108,12 +109,14 @@ Available options:
 | `cw` | All Case Working applications including GAS |
 | `grants-ui` | grants-ui and its dependencies |
 | `agreements` | agreements-api and agreements-ui |
+| `config-broker` | grants-config-broker (local build) |
 
 Options can be combined:
 
 ```bash
 npm run stack cw grants-ui
 npm run stack cw grants-ui agreements
+npm run stack cw grants-ui config-broker
 ```
 
 Run `npm run stack` with no arguments to see the help output.
@@ -152,6 +155,19 @@ If you're running the full stack there are still some caveats that you need to b
 - See Auth token for grants-ui (option 3) for login details to grants-ui
 - Once you have submitted the application, log in to case working frontend - http://localhost:3100 (see Setting up user access)
 - Once you have a generated agreement you'll need to run ```node scripts/fix-local-agreements-url.js``` in fg-cw-backend to update the agreements-ui endpoint for local development if you want to view the agreement as a case-worker would. This is because the endpoint is hardcoded into the workflow definition for each env so points to a non-local environment.
+
+### Option 5: Running with grants-config-broker (local development)
+
+Use this option when you need to work on grant configurations locally — adding new grants, updating config files, or testing the broker itself.
+
+- Check out `grants-config-broker` alongside this repo (see directory structure above).
+- In `fg-grants-core` run:
+  ```bash
+  npm run stack cw grants-ui config-broker
+  ```
+- The broker is built from your local `grants-config-broker` source and hot-reloads on file changes.
+- It is available at `http://localhost:3012`.
+- To add a new grant locally, create a directory under `grants-config-broker/compose/` following the `{grant-name}@{version}` format and register it in `grants-config-broker/compose/release.yml`. See the grants-config-broker README for details.
 
 ### Improvements/to-do
 

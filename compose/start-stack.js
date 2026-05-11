@@ -7,12 +7,17 @@ const options = {
   "grants-ui" : {
     description: "grants-ui and it's dependencies",
     targets: ["grants-ui", "land-grants"],
-    profiles: ["grants-ui"]
+    profiles: ["grants-ui"],
   },
   agreements: {
     description: "the agreements-api and agreements-ui projects",
     targets: ["agreements-api", "agreements-ui"],
-    profiles: ["agreements"]
+    profiles: ["agreements"],
+  },
+  "config-broker": {
+    description: "config broker locally",
+    targets: ["config-broker"],
+    profiles: ["config-broker"],
   }
 };
 
@@ -38,7 +43,7 @@ function main() {
 
   if(args.length <= 0) return showHelp();
 
-  const overrides = (args.includes("grants-ui") || args.includes("agreements"));
+  const overrides = (args.includes("config-broker") || args.includes("grants-ui") || args.includes("agreements"));
 
   const configs = args.reduce((acc, arg) => {
     const app = options[arg];

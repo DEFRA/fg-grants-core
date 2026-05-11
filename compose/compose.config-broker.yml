@@ -1,0 +1,22 @@
+services:
+  grants-config-broker:
+    profiles:
+      - config-broker
+    pull_policy: never
+    build:
+      context: ../grants-config-broker
+      target: development
+    volumes:
+      - ../grants-config-broker/src:/home/node/src
+      - ../grants-config-broker/compose:/home/node/config
+      - ../grants-config-broker/package.json:/home/node/package.json
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3012/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  localstack:
+    volumes:
+      - ../grants-config-broker/compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack-config.sh

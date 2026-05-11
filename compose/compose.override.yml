@@ -153,6 +153,21 @@ services:
     networks:
       - cdp-tenant
 
+  grants-config-broker:
+    profiles:
+      - config-broker
+    networks:
+      - cdp-tenant
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mongo-ready: 
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    environment:
+      PORT: 3012
+
 volumes:
   redis-data:
   mongodb-data:
