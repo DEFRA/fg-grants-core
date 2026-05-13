@@ -5,9 +5,9 @@ const options = {
     profiles: []
   },
   "grants-ui" : {
-    description: "grants-ui and it's dependencies",
-    targets: ["grants-ui", "land-grants"],
-    profiles: ["grants-ui"],
+    description: "grants-ui and its dependencies",
+    targets: ["grants-ui", "land-grants", "config-broker"],
+    profiles: ["grants-ui", "config-broker"],
   },
   agreements: {
     description: "the agreements-api and agreements-ui projects",
@@ -22,10 +22,14 @@ const options = {
 };
 
 
+function unique(items) {
+  return [...new Set(items)];
+}
+
 function processTargets(targets) {
-  return targets.reduce((acc, target) => {
-      return acc += ` -f compose/compose.${target}.yml`;
-    }, ""); 
+  return unique(targets).reduce((acc, target) => {
+    return acc += ` -f compose/compose.${target}.yml`;
+  }, ""); 
 }
 
 function printOverrides(configs, override) {
@@ -34,7 +38,7 @@ function printOverrides(configs, override) {
 }
 
 function printProfiles(configs) {
-  const profiles = configs.map((p) => ` --profile ${p}`)
+  const profiles = unique(configs).map((p) => ` --profile ${p}`)
   return profiles.join("");
 }
 
