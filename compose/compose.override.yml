@@ -35,6 +35,14 @@ services:
     networks:
       - cdp-tenant
     environment:
+      CONFIG_API_URL: http://grants-ui-config-api:3011
+      CONFIG_API_JWT_SECRET: forms-config-jwt-secret
+      FORMS_API_SLUGS: ""
+      GRANTS_UI_BACKEND_URL: http://grants-ui-backend:3001
+      GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
+      GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
+      CV_API_MOCK_ENABLED: true
+      CV_API_STUB_URL: http://grants-ui-dal-stub:3008/graphql
       GAS_API_URL: http://gas:3102
       GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
 
@@ -43,18 +51,28 @@ services:
       - grants-ui
     networks:
       - cdp-tenant
+    environment:
+      GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
+      GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
 
   grants-ui-config-api:
     profiles:
       - grants-ui
     networks:
       - cdp-tenant
+    environment:
+      JWT_SECRET: forms-config-jwt-secret
+      FORMS_API_SLUGS: example-grant-with-auth
 
   fcp-defra-id-stub:
     profiles:
       - grants-ui
     networks:
       - cdp-tenant
+    environment:
+      AUTH_MODE: basic
+      AUTH_OVERRIDE: ""
+      AUTH_OVERRIDE_FILE: users.json
 
   grants-ui-dal-stub:
     profiles:
