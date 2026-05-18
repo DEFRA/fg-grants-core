@@ -122,6 +122,10 @@ services:
     restart: "no"
 
   farming-grants-agreements-api:
+    build:
+      context: ../farming-grants-agreements-api/
+    env_file:
+      - compose/aws.env
     profiles:
       - agreements
     depends_on:
@@ -167,6 +171,14 @@ services:
         condition: service_healthy
     environment:
       PORT: 3012
+
+  redis:
+    restart: always
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   redis-data:
