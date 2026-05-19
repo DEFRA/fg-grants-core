@@ -35,6 +35,7 @@ function processTargets(targets) {
 function printOverrides(configs, override) {
   const returnString = configs.join("");
   if(override) return returnString + " -f compose/compose.override.yml"
+  return returnString;
 }
 
 function printProfiles(configs) {
