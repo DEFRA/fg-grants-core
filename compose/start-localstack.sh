@@ -75,7 +75,19 @@ create_topic_and_queue "gas__sns__application_status_updated_fifo.fifo" "gas__sq
 create_topic_and_queue "gas__sns__create_new_case_fifo.fifo" "cw__sqs__create_new_case_fifo.fifo" &
 create_topic_and_queue "gas__sns__update_case_status_fifo.fifo" "cw__sqs__update_status_fifo.fifo" &
 create_topic_and_queue "gas__sns__create_agreement_fifo.fifo" "create_agreement_fifo.fifo" &
-create_topic "gas__sns__update_agreement_status_fifo.fifo" &
+# create_topic "gas__sns__update_agreement_status_fifo.fifo" &
+
+# agreements-api
+create_topic "fcp_audit_farming_grants_agreements_api" &
+create_topic "fcp_audit_farming_grants_agreements_ui" &
+create_topic "fcp_audit_farming_grants_agreements_pdf" &
+create_topic "fcp_audit_grants_payment_service" &
+create_topic_and_queue "agreement_status_updated_fifo.fifo" "create_agreement_pdf_fifo.fifo" &
+# create_topic_and_queue "grant_application_approved_fifo.fifo" "create_agreement_fifo.fifo" &
+create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agreement_fifo.fifo" &
+create_topic_and_queue "create_payment.fifo" "gps__sqs__create_payment.fifo" &
+create_topic_and_queue "cancel_payment.fifo" "gps__sqs__cancel_payment.fifo" &
+create_topic "agreement_status_updated_fifo.fifo" &
 
 wait
 

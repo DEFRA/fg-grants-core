@@ -1,0 +1,3 @@
+include:
+  - path: ../farming-grants-agreements-ui/compose/farming-grants-agreements-ui.yml
+    project_directory: ../farming-grants-agreements-ui

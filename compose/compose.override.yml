@@ -35,6 +35,14 @@ services:
     networks:
       - cdp-tenant
     environment:
+      CONFIG_API_URL: http://grants-ui-config-api:3011
+      CONFIG_API_JWT_SECRET: forms-config-jwt-secret
+      FORMS_API_SLUGS: ""
+      GRANTS_UI_BACKEND_URL: http://grants-ui-backend:3001
+      GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
+      GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
+      CV_API_MOCK_ENABLED: true
+      CV_API_STUB_URL: http://grants-ui-dal-stub:3008/graphql
       GAS_API_URL: http://gas:3102
       GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
 
@@ -43,18 +51,28 @@ services:
       - grants-ui
     networks:
       - cdp-tenant
+    environment:
+      GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
+      GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
 
   grants-ui-config-api:
     profiles:
       - grants-ui
     networks:
       - cdp-tenant
+    environment:
+      JWT_SECRET: forms-config-jwt-secret
+      FORMS_API_SLUGS: example-grant-with-auth
 
   fcp-defra-id-stub:
     profiles:
       - grants-ui
     networks:
       - cdp-tenant
+    environment:
+      AUTH_MODE: basic
+      AUTH_OVERRIDE: ""
+      AUTH_OVERRIDE_FILE: users.json
 
   grants-ui-dal-stub:
     profiles:
@@ -93,6 +111,92 @@ services:
     environment:
       NODE_ENV: development
       LOG_FORMAT: ecs
+      AGREEMENTS_UI_URL: http://host.docker.internal:3300
+      AGREEMENTS_UI_TOKEN: your-agreements-ui-token
+      AGREEMENTS_BASE_URL: /agreement
+      AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
+      AGREEMENTS_PROXY_TIMEOUT_MS: 30000
+  
+  # Seeds the pre-minted dev token hash so grants-ui can authenticate with GAS
+  # without needing to run scripts/mint-access-token.js manually.
+  # Raw token (grants-ui: GAS_API_AUTH_TOKEN - see compose.override.yml): f081263c-6876-4d40-936f-ebdf63b5e893
+  gas-seed-token:
+    image: mongo:7.0
+    container_name: gas-seed-token
+    networks:
+      - cdp-tenant
+    depends_on:
+      mongo-ready:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      gas:
+        condition: service_healthy
+    environment:
+      TOKEN_HASH: 54cc2d5522a2d00a483f4b394a9e931fcf0dd48b97f8c43e780db071d3922c01
+    volumes:
+      - ./compose/seed-gas-token.sh:/seed-gas-token.sh:ro
+    entrypoint: ["/bin/bash", "/seed-gas-token.sh"]
+    restart: "no"
+
+  farming-grants-agreements-api:
+    build:
+      context: ../farming-grants-agreements-api/
+    env_file:
+      - compose/aws.env
+    profiles:
+      - agreements
+    depends_on:
+      localstack:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    environment:
+      AWS_ENDPOINT_URL: http://localstack:4566
+      SQS_ENDPOINT: http://localstack:4566
+      QUEUE_URL: http://localstack:4566/000000000000/create_agreement_fifo.fifo
+      SQS_GAS_APPLICATION_STATUS_UPDATED_QUEUE_URL: http://localstack:4566/000000000000/update_agreement_fifo.fifo
+      S3_ENDPOINT: http://localstack:4566
+      SNS_ENDPOINT: http://localstack:4566
+      AWS_REGION: eu-west-2
+      AWS_DEFAULT_REGION: eu-west-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      MONGO_URI: mongodb://mongodb:27017/
+      TOPIC_ARN: arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo
+      LAND_GRANTS_BASE_URL: http://host.docker.internal:3009
+      SEED_DB: false
+    networks:
+      - cdp-tenant
+
+  farming-grants-agreements-ui:
+    profiles:
+      - agreements
+    networks:
+      - cdp-tenant
+
+  grants-config-broker:
+    profiles:
+      - config-broker
+    networks:
+      - cdp-tenant
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mongo-ready: 
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    environment:
+      PORT: 3012
+
+  redis:
+    restart: always
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   redis-data:
