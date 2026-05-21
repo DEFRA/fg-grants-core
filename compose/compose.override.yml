@@ -45,6 +45,10 @@ services:
       CV_API_STUB_URL: http://grants-ui-dal-stub:3008/graphql
       GAS_API_URL: http://gas:3102
       GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
+      AGREEMENTS_UI_URL: http://farming-grants-agreements-ui:3300
+      AGREEMENTS_UI_TOKEN: your-agreements-ui-token
+      AGREEMENTS_BASE_URL: /agreement
+      AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
 
   grants-ui-backend:
     profiles:
@@ -165,6 +169,7 @@ services:
       MONGO_URI: mongodb://mongodb:27017/
       TOPIC_ARN: arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo
       LAND_GRANTS_BASE_URL: http://host.docker.internal:3009
+      LAND_GRANTS_TOKEN: ${LAND_GRANTS_TOKEN:-Mk0wR2FJMy9GOVFkVDZJQzpjTmQ0dVpyZzJWNlBWd3Y4djlLaEpBPT06NVVWZHBFMWRIUDM2WXc9PQ==}
       SEED_DB: false
     networks:
       - cdp-tenant
