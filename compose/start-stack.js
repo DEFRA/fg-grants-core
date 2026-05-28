@@ -48,7 +48,7 @@ function main() {
 
   if(args.length <= 0) return showHelp();
 
-  const overrides = (args.includes("config-broker") || args.includes("grants-ui") || args.includes("agreements"));
+  const overrides = (args.includes("cw") || args.includes("config-broker") || args.includes("grants-ui") || args.includes("agreements"));
 
   const configs = args.reduce((acc, arg) => {
     const app = options[arg];
