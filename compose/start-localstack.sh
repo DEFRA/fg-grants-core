@@ -12,6 +12,15 @@ function create_topic() {
   echo $topic_arn
 }
 
+function create_standard_topic() {
+  local topic_name=$1
+  local topic_arn=$(awslocal sns create-topic \
+	  --name $topic_name \
+	  --query "TopicArn" \
+	  --output text)
+  echo $topic_arn
+}
+
 function create_queue() {
   local queue_name=$1
   local base="${queue_name%%.fifo}"
@@ -77,11 +86,13 @@ create_topic_and_queue "gas__sns__update_case_status_fifo.fifo" "cw__sqs__update
 create_topic_and_queue "gas__sns__create_agreement_fifo.fifo" "create_agreement_fifo.fifo" &
 # create_topic "gas__sns__update_agreement_status_fifo.fifo" &
 
+create_standard_topic "fcp_audit_fg_gas_backend" &
+
 # agreements-api
-create_topic "fcp_audit_farming_grants_agreements_api" &
-create_topic "fcp_audit_farming_grants_agreements_ui" &
-create_topic "fcp_audit_farming_grants_agreements_pdf" &
-create_topic "fcp_audit_grants_payment_service" &
+create_standard_topic "fcp_audit_farming_grants_agreements_api" &
+create_standard_topic "fcp_audit_farming_grants_agreements_ui" &
+create_standard_topic "fcp_audit_farming_grants_agreements_pdf" &
+create_standard_topic "fcp_audit_grants_payment_service" &
 create_topic_and_queue "agreement_status_updated_fifo.fifo" "create_agreement_pdf_fifo.fifo" &
 # create_topic_and_queue "grant_application_approved_fifo.fifo" "create_agreement_fifo.fifo" &
 create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agreement_fifo.fifo" &
