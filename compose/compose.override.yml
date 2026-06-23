@@ -7,6 +7,12 @@ services:
       - ../fg-grants-core/compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack-core.sh
     networks:
       - cdp-tenant
+    healthcheck:
+      test: ["CMD-SHELL", "awslocal sqs get-queue-url --queue-name cw__sqs__config_version_updated 2>/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
 
   mongodb:
     image: mongo:7.0
@@ -94,6 +100,10 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       AWS_ENDPOINT_URL: http://localstack:4566
+      GAS__SQS__CONFIG_VERSION_QUEUE_URL: http://localstack:4566/000000000000/gas__sqs__config_version_updated
+      CONFIG_BROKER_S3_BUCKET: configs-bucket
+    volumes:
+      - ../fg-gas-backend/src:/home/node/src
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
       interval: 10s
@@ -105,12 +115,17 @@ services:
     networks:
       - cdp-tenant
     environment:
+      PORT: 3101
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       OIDC_JWKS_URI: http://entra:3010/jwks
       AWS_ENDPOINT_URL: http://localstack:4566
       CREATE_NEW_CASE_SQS_URL: http://localstack:4566/000000000000/create_new_case_fifo.fifo
       CW__SQS__CREATE_NEW_CASE_URL: http://localstack:4566/000000000000/cw__sqs__create_new_case_fifo.fifo
       CW__SQS__UPDATE_STATUS_URL: http://localstack:4566/000000000000/cw__sqs__update_status_fifo.fifo
+      CW__SQS__CONFIG_VERSION_QUEUE_URL: http://localstack:4566/000000000000/cw__sqs__config_version_updated
+      CONFIG_BROKER_S3_BUCKET: configs-bucket
+    volumes:
+      - ../fg-cw-backend/src:/home/node/src
 
   fg-cw-frontend:
     environment:
@@ -121,7 +136,7 @@ services:
       AGREEMENTS_BASE_URL: /agreement
       AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
       AGREEMENTS_PROXY_TIMEOUT_MS: 30000
-  
+
   # Seeds the pre-minted dev token hash so grants-ui can authenticate with GAS
   # without needing to run scripts/mint-access-token.js manually.
   # Raw token (grants-ui: GAS_API_AUTH_TOKEN - see compose.override.yml): f081263c-6876-4d40-936f-ebdf63b5e893
@@ -188,17 +203,26 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-      mongo-ready: 
+      mongo-ready:
         condition: service_healthy
       localstack:
         condition: service_healthy
     environment:
       PORT: 3012
+      MONGO_URI: mongodb://mongodb:27017/
+      MONGO_DATABASE: grants-config-broker
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_REGION: eu-west-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      GFR__SNS__CONFIG_UPDATE_TOPIC_ARN: arn:aws:sns:eu-west-2:000000000000:gfr__sns___config_update
+      CONFIG_BUCKET_NAME: configs-bucket
+      CONFIG_INPUT_QUEUE_URL: http://localstack:4566/000000000000/gfr__sqs___config_input
 
   redis:
     restart: always
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3

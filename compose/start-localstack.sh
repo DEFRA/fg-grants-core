@@ -67,6 +67,14 @@ function create_topic_and_queue() {
   subscribe_queue_to_topic $topic_arn $queue_arn
 }
 
+# S3 bucket for config broker (ignore if already exists from config-broker init script)
+awslocal s3 mb s3://configs-bucket 2>/dev/null || true
+
+# Config broker input queue (standard)
+cb_input_dlq_url=$(awslocal sqs create-queue --queue-name "gfr__sqs___config_input-dead-letter-queue" --query "QueueUrl" --output text)
+cb_input_dlq_arn=$(awslocal sqs get-queue-attributes --queue-url $cb_input_dlq_url --attribute-name "QueueArn" --query "Attributes.QueueArn" --output text)
+awslocal sqs create-queue --queue-name "gfr__sqs___config_input" --attributes '{ "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$cb_input_dlq_arn'\",\"maxReceiveCount\":\"1\"}" }' --query "QueueUrl" --output text
+
 create_topic_and_queue "cw__sns__case_status_updated_fifo.fifo" "gas__sqs__update_status_fifo.fifo" &
 create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agreement_status_fifo.fifo" &
 create_topic_and_queue "agreement_status_updated_fifo.fifo" "gas__sqs__update_agreement_status_fifo.fifo" &
@@ -88,6 +96,23 @@ create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agr
 create_topic_and_queue "create_payment.fifo" "gps__sqs__create_payment.fifo" &
 create_topic_and_queue "cancel_payment.fifo" "gps__sqs__cancel_payment.fifo" &
 create_topic "agreement_status_updated_fifo.fifo" &
+
+# Config broker: standard topic + standard queues for GAS and CW
+config_topic_arn=$(awslocal sns create-topic --name gfr__sns___config_update --query "TopicArn" --output text)
+
+# GAS config version queue (standard)
+gas_cv_dlq_url=$(awslocal sqs create-queue --queue-name "gas__sqs__config_version_updated-dead-letter-queue" --query "QueueUrl" --output text)
+gas_cv_dlq_arn=$(awslocal sqs get-queue-attributes --queue-url $gas_cv_dlq_url --attribute-name "QueueArn" --query "Attributes.QueueArn" --output text)
+gas_cv_url=$(awslocal sqs create-queue --queue-name "gas__sqs__config_version_updated" --attributes '{ "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$gas_cv_dlq_arn'\",\"maxReceiveCount\":\"1\"}" }' --query "QueueUrl" --output text)
+gas_cv_arn=$(awslocal sqs get-queue-attributes --queue-url $gas_cv_url --attribute-name "QueueArn" --query "Attributes.QueueArn" --output text)
+awslocal sns subscribe --topic-arn $config_topic_arn --protocol sqs --notification-endpoint $gas_cv_arn --attributes '{ "RawMessageDelivery": "true" }'
+
+# CW config version queue (standard)
+cw_cv_dlq_url=$(awslocal sqs create-queue --queue-name "cw__sqs__config_version_updated-dead-letter-queue" --query "QueueUrl" --output text)
+cw_cv_dlq_arn=$(awslocal sqs get-queue-attributes --queue-url $cw_cv_dlq_url --attribute-name "QueueArn" --query "Attributes.QueueArn" --output text)
+cw_cv_url=$(awslocal sqs create-queue --queue-name "cw__sqs__config_version_updated" --attributes '{ "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$cw_cv_dlq_arn'\",\"maxReceiveCount\":\"1\"}" }' --query "QueueUrl" --output text)
+cw_cv_arn=$(awslocal sqs get-queue-attributes --queue-url $cw_cv_url --attribute-name "QueueArn" --query "Attributes.QueueArn" --output text)
+awslocal sns subscribe --topic-arn $config_topic_arn --protocol sqs --notification-endpoint $cw_cv_arn --attributes '{ "RawMessageDelivery": "true" }'
 
 wait
 
