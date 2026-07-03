@@ -67,7 +67,7 @@ function main() {
   );
 
   const { spawn } = require("child_process");
-  const cmd = `docker compose -f compose.yml ${printOverrides(configs.overlays, overrides)}${printProfiles(configs.profiles)} up --build`;
+  const cmd = `docker compose -f compose.yml ${printOverrides(configs.overlays, overrides)}${printProfiles(configs.profiles)} up --build --watch`;
 
   console.log(`running ${cmd}`);
   // Actually run the docker compose command

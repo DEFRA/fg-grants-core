@@ -2,6 +2,11 @@
 
 set -e
 
+# How many times a message may be received before it is moved to the DLQ.
+# Defaults to 1 (a single failed receive dead-letters). 
+# Set MAX_READS=2 in aws.env when you want to peek at the queues 
+MAX_READS="${MAX_READS:-1}"
+
 function create_topic() {
   local topic_name=$1
   local topic_arn=$(awslocal sns create-topic \
@@ -12,13 +17,22 @@ function create_topic() {
   echo $topic_arn
 }
 
+function create_standard_topic() {
+  local topic_name=$1
+  local topic_arn=$(awslocal sns create-topic \
+	  --name $topic_name \
+	  --query "TopicArn" \
+	  --output text)
+  echo $topic_arn
+}
+
 function create_queue() {
   local queue_name=$1
   local base="${queue_name%%.fifo}"
-  # Create the DLQ
   local dlq_url=$(
     awslocal sqs create-queue \
-    --queue-name "$base-dead-letter-queue" \
+    --queue-name "$base-dead-letter-queue.fifo" \
+    --attributes '{ "FifoQueue":"true", "ContentBasedDeduplication":"true" }' \
     --query "QueueUrl" --output text
   )
 
@@ -34,7 +48,44 @@ function create_queue() {
   local queue_url=$(
     awslocal sqs create-queue \
       --queue-name $queue_name \
-      --attributes '{ "FifoQueue":"true", "ContentBasedDeduplication":"true", "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$dlq_arn'\",\"maxReceiveCount\":\"1\"}" }' \
+      --attributes '{ "FifoQueue":"true", "ContentBasedDeduplication":"true", "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$dlq_arn'\",\"maxReceiveCount\":\"'$MAX_READS'\"}" }' \
+      --query "QueueUrl" \
+      --output text
+  )
+
+  local queue_arn=$(
+    awslocal sqs get-queue-attributes \
+      --queue-url $queue_url \
+      --attribute-name "QueueArn" \
+      --query "Attributes.QueueArn" \
+      --output text
+  )
+
+  echo $queue_arn
+}
+
+function create_standard_queue() {
+  local queue_name=$1
+  # Standard source queue with a standard DLQ (source and DLQ types must match).
+  local dlq_url=$(
+    awslocal sqs create-queue \
+      --queue-name "$queue_name-dead-letter-queue" \
+      --query "QueueUrl" --output text
+  )
+
+  local dlq_arn=$(
+    awslocal sqs get-queue-attributes \
+      --queue-url $dlq_url \
+      --attribute-name "QueueArn" \
+      --query "Attributes.QueueArn" \
+      --output text
+  )
+
+  # Create the queue with DLQ attached
+  local queue_url=$(
+    awslocal sqs create-queue \
+      --queue-name $queue_name \
+      --attributes '{ "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$dlq_arn'\",\"maxReceiveCount\":\"'$MAX_READS'\"}" }' \
       --query "QueueUrl" \
       --output text
   )
@@ -67,6 +118,16 @@ function create_topic_and_queue() {
   subscribe_queue_to_topic $topic_arn $queue_arn
 }
 
+function create_standard_topic_and_queue() {
+  local topic_name=$1
+  local queue_name=$2
+
+  local topic_arn=$(create_standard_topic $topic_name)
+  local queue_arn=$(create_standard_queue $queue_name)
+
+  subscribe_queue_to_topic $topic_arn $queue_arn
+}
+
 # S3 bucket for config broker (ignore if already exists from config-broker init script)
 awslocal s3 mb s3://configs-bucket 2>/dev/null || true
 
@@ -85,11 +146,15 @@ create_topic_and_queue "gas__sns__update_case_status_fifo.fifo" "cw__sqs__update
 create_topic_and_queue "gas__sns__create_agreement_fifo.fifo" "create_agreement_fifo.fifo" &
 # create_topic "gas__sns__update_agreement_status_fifo.fifo" &
 
+
+# create_standard_topic "gas__sns__audit_topic_arn" &
+create_standard_topic_and_queue "gas__sns__audit_topic_arn" "fcp_audit_fg_gas_backend"  & # sqs queue name here is for debugging/inspection only 
+
 # agreements-api
-create_topic "fcp_audit_farming_grants_agreements_api" &
-create_topic "fcp_audit_farming_grants_agreements_ui" &
-create_topic "fcp_audit_farming_grants_agreements_pdf" &
-create_topic "fcp_audit_grants_payment_service" &
+create_standard_topic "fcp_audit_farming_grants_agreements_api" &
+create_standard_topic "fcp_audit_farming_grants_agreements_ui" &
+create_standard_topic "fcp_audit_farming_grants_agreements_pdf" &
+create_standard_topic "fcp_audit_grants_payment_service" &
 create_topic_and_queue "agreement_status_updated_fifo.fifo" "create_agreement_pdf_fifo.fifo" &
 # create_topic_and_queue "grant_application_approved_fifo.fifo" "create_agreement_fifo.fifo" &
 create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agreement_fifo.fifo" &
