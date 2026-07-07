@@ -35,11 +35,8 @@ services:
     networks:
       - cdp-tenant
     environment:
-      CONFIG_API_URL: http://grants-ui-config-api:3011
       AGREEMENTS_UI_URL: http://host.docker.internal:3300
       AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
-      CONFIG_API_JWT_SECRET: forms-config-jwt-secret
-      FORMS_API_SLUGS: ""
       GRANTS_UI_BACKEND_URL: http://grants-ui-backend:3001
       GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
       GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
@@ -47,10 +44,8 @@ services:
       CV_API_STUB_URL: http://grants-ui-dal-stub:3008/graphql
       GAS_API_URL: http://gas:3102
       GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
-      AGREEMENTS_UI_URL: http://farming-grants-agreements-ui:3300
       AGREEMENTS_UI_TOKEN: your-agreements-ui-token
       AGREEMENTS_BASE_URL: /agreement
-      AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
 
   grants-ui-backend:
     profiles:
@@ -60,15 +55,6 @@ services:
     environment:
       GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
       GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
-
-  grants-ui-config-api:
-    profiles:
-      - grants-ui
-    networks:
-      - cdp-tenant
-    environment:
-      JWT_SECRET: forms-config-jwt-secret
-      FORMS_API_SLUGS: example-grant-with-auth
 
   fcp-defra-id-stub:
     profiles:
