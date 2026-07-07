@@ -36,6 +36,8 @@ services:
       - cdp-tenant
     environment:
       CONFIG_API_URL: http://grants-ui-config-api:3011
+      AGREEMENTS_UI_URL: http://host.docker.internal:3300
+      AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
       CONFIG_API_JWT_SECRET: forms-config-jwt-secret
       FORMS_API_SLUGS: ""
       GRANTS_UI_BACKEND_URL: http://grants-ui-backend:3001
@@ -110,6 +112,9 @@ services:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       OIDC_JWKS_URI: http://entra:3010/jwks
       AWS_ENDPOINT_URL: http://localstack:4566
+      CREATE_NEW_CASE_SQS_URL: http://localstack:4566/000000000000/create_new_case_fifo.fifo
+      CW__SQS__CREATE_NEW_CASE_URL: http://localstack:4566/000000000000/cw__sqs__create_new_case_fifo.fifo
+      CW__SQS__UPDATE_STATUS_URL: http://localstack:4566/000000000000/cw__sqs__update_status_fifo.fifo
 
   fg-cw-frontend:
     environment:
