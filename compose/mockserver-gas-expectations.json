@@ -1,0 +1,25 @@
+[
+  {
+    "id": "grant-funding-calculator-pigs-200",
+    "priority": 0,
+    "httpRequest": {
+      "method": "POST",
+      "path": "/grantFundingCalculator"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": {
+        "items": [
+          { "type": "largeWhite", "description": "Large White", "quantity": 2, "value": 10, "total": 20 },
+          { "type": "britishLandrace", "description": "British Landrace", "quantity": 2, "value": 15, "total": 30 },
+          { "type": "berkshire", "description": "Berkshire", "quantity": 2, "value": 18, "total": 36 },
+          { "type": "other", "description": "Other", "quantity": 2, "value": 10, "total": 20 }
+        ],
+        "pigsData": { "totalPigs": 8 }
+      }
+    }
+  }
+]

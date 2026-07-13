@@ -35,7 +35,7 @@ services:
     networks:
       - cdp-tenant
     environment:
-      CONFIG_API_URL: http://grants-ui-config-api:3011
+      CONFIG_API_URL: http://grants-config-broker:3012
       AGREEMENTS_UI_URL: http://host.docker.internal:3300
       AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
       CONFIG_API_JWT_SECRET: forms-config-jwt-secret
@@ -53,18 +53,12 @@ services:
       - grants-ui
     networks:
       - cdp-tenant
+    depends_on:
+      mongo-ready:
+        condition: service_healthy
     environment:
       GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
       GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
-
-  grants-ui-config-api:
-    profiles:
-      - grants-ui
-    networks:
-      - cdp-tenant
-    environment:
-      JWT_SECRET: forms-config-jwt-secret
-      FORMS_API_SLUGS: example-grant-with-auth
 
   fcp-defra-id-stub:
     profiles:
@@ -87,6 +81,19 @@ services:
       - grants-ui
     networks:
       - cdp-tenant
+    # Only relevant when gas (the real GAS backend, not mockserver-as-GAS) is
+    # part of the stack: grants with %ENVIRONMENT%-templated action URLs
+    # (i.e. pigs-might-fly's fg-gss-pmf calculator) have nothing to resolve
+    # to locally. start-stack.js sets MOCKSERVER_INIT_PATH to add a second
+    # expectations file on top of grants-ui's own when cw+grants-ui both run,
+    # without touching grants-ui's compose/mockserver/expectations.json. 
+    # This has to live here (not compose.gas.yml) since compose.override.yml is
+    # guaranteed to merge last regardless of arg order, and grants-ui's own
+    # compose.yml sets this same env var unconditionally.
+    volumes:
+      - ./compose/mockserver-gas-expectations.json:/config/gas-expectations.json
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: ${MOCKSERVER_INIT_PATH:-/config/expectations.json}
 
   gas:
     networks:
@@ -94,6 +101,7 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       AWS_ENDPOINT_URL: http://localstack:4566
+      GRANT_FUNDING_CALCULATOR_URL: http://host.docker.internal:3001
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
       interval: 10s
