@@ -63,9 +63,20 @@ function main() {
   const { spawn } = require('child_process');
   const cmd = `docker compose -f compose.yml ${printOverrides(configs.overlays, overrides)}${printProfiles(configs.profiles)} up --build --watch`;
 
+  // grants-ui expects config-broker to serve its own grant definitions + allowlists rather than ones from /grants-config-broker
+  const env = { ...process.env };
+  if (args.includes("grants-ui")) {
+    env.CONFIG_BROKER_PACKAGES_DIR = "../grants-ui/localstack/config-broker-local";
+  }
+  // when the real gas backend is running alongside grants-ui, grants with
+  // %ENVIRONMENT%-templated action URLs need somewhere local to resolve to
+  if (args.includes("cw") && args.includes("grants-ui")) {
+    env.MOCKSERVER_INIT_PATH = "/config/*.json";
+  }
+
   console.log(`running ${cmd}`)
   // Actually run the docker compose command
-  const child = spawn(cmd, { stdio: 'inherit', shell: true });
+  const child = spawn(cmd, { stdio: 'inherit', shell: true, env });
 
   child.on('close', (code) => {
     console.log(`docker compose process exited with code ${code}`);

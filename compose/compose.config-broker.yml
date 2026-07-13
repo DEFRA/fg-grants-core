@@ -8,7 +8,7 @@ services:
       target: development
     volumes:
       - ../grants-config-broker/src:/home/node/src
-      - ../grants-config-broker/compose:/home/node/config
+      - ${CONFIG_BROKER_PACKAGES_DIR:-../grants-config-broker/compose}:/home/node/config
       - ../grants-config-broker/package.json:/home/node/package.json
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3012/health"]

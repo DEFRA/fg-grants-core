@@ -27,90 +27,11 @@ nvm use
 npm install
 ``` 
 
-### Option 1: Running one or more farming grants applications using `npm run`
+### Quick start
 
-- In GAS and cw-backend .env file uncomment the "fg-grants-core" lines - these use the common mongoDb connection strings and other common ENV VARS. **Only** use these vars if you're using this option - i.e. running up the case working apps using `npm run dev`.
-- In `fg-grants-core` run `npm run docker:up`
-- Spin up other repos e.g. ~/code/fg-gas-backend `npm run dev`
-- For GAS and cw-backend the migrations scripts will run and populate the db
-- If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
+The preferred method for starting the services.
 
-#### Auth token for GAS via `npm run` (option 1)
-
-- Create a local access token for the gas api:
-  - if running fg-grants-core in docker and the other apps using `npm run` then in fg-gas-backend run `MONGO_URI="mongodb://localhost:27017" MONGO_DATABASE=fg-gas-backend node scripts/mint-access-token.js`
-  - Checkout the readme on `fg-gas-backend` for more information on [ways to mint an access token](https://github.com/DEFRA/fg-gas-backend#minting-service-access-tokens)
-  - Take note of the resulting access token and use this on Postman et-al as the Authorization bearer token.
-  - You can now POST a new application to the GAS application endpoint.
-
-### Option 2: Running all case working apps
-
-- In `fg-grants-core` run `npm run docker:up:cw`
-- For GAS and cw-backend the migrations scripts will run and populate the db
-- If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
-- **In GAS and cw-backend .env file comment out the "fg-grants-core" lines**
-
-#### Auth token for GAS via `docker compose` (option 2)
-
-- The GAS API access token is automatically seeded on `docker compose up`. Check the `gas-seed-token` container logs for the token and hash values:
-  ```
-  docker logs gas-seed-token
-  ```
-- Use the token as the Authorization bearer token in Postman et-al to POST to the GAS application endpoint.
-
-### Option 3: Running case working along with grants-ui
-
-- In `fg-grants-core` run `npm run docker:up:grants-ui`
-- For GAS and cw-backend the migrations scripts will run and populate the db
-- If you're using case working frontend [set up fg-cw-frontend user access on fg-cw-backend](#setting-up-user-access)
-- **In GAS and cw-backend .env file comment out the "fg-grants-core" lines**
-
-#### Auth token for grants-ui (option 3)
-
-- The GAS API access token is automatically seeded on `docker compose up` and pre-configured as `GAS_API_AUTH_TOKEN` in `compose/compose.override.yml`.
-- grants-ui should be available at `http://localhost:3000`
-- e.g. sign in to grants-ui with CRN 1300000069 and password "pass" then choose the second land parcel in the list when you reach the land parcel page.
-
-### Option 4: Running the full stack with agreements
-
-This option runs all case working apps, grants-ui, and the agreements services (`farming-grants-agreements-api` and `farming-grants-agreements-ui`).
-
-- Check out `farming-grants-agreements-api` and `farming-grants-agreements-ui` alongside this repo (see directory structure above).
-- In `fg-grants-core` run `npm run docker:up:agreements`
-- The agreements services run under the `agreements` Docker Compose profile and connect to the shared localstack and MongoDB instances.
-- The `fg-cw-frontend` service is automatically configured with the agreements proxy env vars (`AGREEMENTS_UI_URL`, `AGREEMENTS_JWT_SECRET`, etc.) via `compose/compose.override.yml`.
-- **In GAS and cw-backend .env file comment out the "fg-grants-core" lines**
-
-The following additional SNS topics and SQS queues are created in localstack for agreements:
-
-| Resource | Type |
-|----------|------|
-| `agreement_status_updated_fifo.fifo` → `create_agreement_pdf_fifo.fifo` | topic + queue |
-| `gas__sns__update_agreement_status_fifo.fifo` → `update_agreement_fifo.fifo` | topic + queue |
-| `create_payment.fifo` → `gps__sqs__create_payment.fifo` | topic + queue |
-| `cancel_payment.fifo` → `gps__sqs__cancel_payment.fifo` | topic + queue |
-| `fcp_audit_farming_grants_agreements_api` | topic |
-| `fcp_audit_farming_grants_agreements_ui` | topic |
-| `fcp_audit_farming_grants_agreements_pdf` | topic |
-| `fcp_audit_grants_payment_service` | topic |
-
-
-### Option 5: Running with grants-config-broker (local development)
-
-Use this option when you need to work on grant configurations locally — adding new grants, updating config files, or testing the broker itself.
-
-- Check out `grants-config-broker` alongside this repo (see directory structure above).
-- In `fg-grants-core` run:
-  ```bash
-  npm run stack cw grants-ui config-broker
-  ```
-- The broker is built from your local `grants-config-broker` source and hot-reloads on file changes.
-- It is available at `http://localhost:3012`.
-- To add a new grant locally, create a directory under `grants-config-broker/compose/` following the `{grant-name}@{version}` format and register it in `grants-config-broker/compose/release.yml`. See the grants-config-broker README for details.
-
-### Using the `stack` helper
-
-A `start-stack.js` script provides a shorthand for composing the right set of services without needing to remember the full `docker compose` command.
+`start-stack.js` script provides a shorthand for composing the right set of services without needing to remember the full `docker compose` command.
 
 ```
 npm run stack [options...]
@@ -134,6 +55,7 @@ npm run stack cw grants-ui config-broker
 ```
 
 Run `npm run stack` with no arguments to see the help output.
+
 
 ### Setting up user access
 
