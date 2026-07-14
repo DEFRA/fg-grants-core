@@ -1,0 +1,3 @@
+include:
+  - path: ../fg-grants-platform-admin/compose/compose.platform-admin.yml
+    project_directory: ../fg-grants-platform-admin

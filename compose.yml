@@ -64,7 +64,7 @@ services:
 
   entra:
     container_name: entra
-    image: defradigital/fg-entra-stub-frontend:0.13.0
+    image: defradigital/fg-entra-stub-frontend:0.14.0
     ports:
       - "3010:3010"
     networks:

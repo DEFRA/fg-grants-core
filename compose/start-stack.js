@@ -1,7 +1,7 @@
 const options = {
   cw: {
     description: "all Case Working applications including gas",
-    targets: ["gas", "cw-backend", "cw-frontend"],
+    targets: ["gas", "cw-backend", "cw-frontend", "platform-admin"],
     profiles: []
   },
   "grants-ui" : {
