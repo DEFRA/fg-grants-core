@@ -10,6 +10,7 @@
   /fg-gas-backend
   /fg-cw-backend
   /fg-cw-frontend
+  /fg-grants-platform-admin
   /grants-ui (optional)
   /farming-grants-agreements-api (optional)
   /farming-grants-agreements-ui (optional)
@@ -41,7 +42,7 @@ Available options:
 
 | Option | Description |
 |--------|-------------|
-| `cw` | All Case Working applications including GAS |
+| `cw` | All Case Working applications including GAS and the grants platform admin app |
 | `grants-ui` | grants-ui and its dependencies |
 | `agreements` | agreements-api and agreements-ui |
 | `config-broker` | grants-config-broker (local build) |
