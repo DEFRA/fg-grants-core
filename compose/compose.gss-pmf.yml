@@ -1,0 +1,18 @@
+services:
+  fg-gss-pmf:
+    build:
+      context: ../fg-gss-pmf
+      target: development
+    profiles:
+      - gss-pmf
+    networks:
+      - cdp-tenant
+    env_file:
+      - ../fg-gss-pmf/compose/aws.env
+    environment:
+      PORT: 3001
+      NODE_ENV: development
+      LOCALSTACK_ENDPOINT: http://localstack:4566
+    volumes:
+      - ../fg-gss-pmf/src:/home/node/src
+      - ../fg-gss-pmf/package.json:/home/node/package.json
