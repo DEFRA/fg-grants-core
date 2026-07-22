@@ -14,6 +14,7 @@
   /grants-ui (optional)
   /farming-grants-agreements-api (optional)
   /farming-grants-agreements-ui (optional)
+  /fg-gss-pmf (optional)
   /grants-config-broker (optional)
 ```
 
@@ -45,6 +46,7 @@ Available options:
 | `cw` | All Case Working applications including GAS and the grants platform admin app |
 | `grants-ui` | grants-ui and its dependencies |
 | `agreements` | agreements-api and agreements-ui |
+| `gss-pmf` | Pigs Might Fly grant funding calculator |
 | `config-broker` | grants-config-broker (local build) |
 
 Options can be combined:
@@ -52,6 +54,7 @@ Options can be combined:
 ```bash
 npm run stack cw grants-ui
 npm run stack cw grants-ui agreements
+npm run stack cw grants-ui agreements gss-pmf
 npm run stack cw grants-ui config-broker
 ```
 

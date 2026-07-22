@@ -101,7 +101,7 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       AWS_ENDPOINT_URL: http://localstack:4566
-      GRANT_FUNDING_CALCULATOR_URL: http://host.docker.internal:3001
+      GRANT_FUNDING_CALCULATOR_URL: http://fg-gss-pmf:3001
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
       interval: 10s

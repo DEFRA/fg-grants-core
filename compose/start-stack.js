@@ -14,6 +14,11 @@ const options = {
     targets: ["agreements-api", "agreements-ui"],
     profiles: ["agreements"],
   },
+  "gss-pmf": {
+    description: "the Pigs Might Fly grant funding calculator",
+    targets: ["gss-pmf"],
+    profiles: ["gss-pmf"],
+  },
   "config-broker": {
     description: "config broker locally",
     targets: ["config-broker"],
@@ -48,7 +53,7 @@ function main() {
 
   if(args.length <= 0) return showHelp();
 
-  const overrides = (args.includes("cw") || args.includes("config-broker") || args.includes("grants-ui") || args.includes("agreements"));
+  const overrides = (args.includes("cw") || args.includes("config-broker") || args.includes("grants-ui") || args.includes("agreements") || args.includes("gss-pmf"));
 
   const configs = args.reduce((acc, arg) => {
     const app = options[arg];
@@ -82,7 +87,7 @@ function main() {
     console.log(`docker compose process exited with code ${code}`);
     process.exit(code);
   });
-};
+}
 
 function showHelp() {
   console.log(`
