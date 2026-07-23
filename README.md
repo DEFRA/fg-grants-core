@@ -1,6 +1,6 @@
 # fg-grants-core
 
-- This repo handles the infrastructure set up Entra stub, mongoDB, redis, and AWS localstack for Case Working, GAS, and Agreements services.
+- This repo handles the infrastructure set up Entra stub, mongoDB, redis, and the AWS emulator (floci) for Case Working, GAS, and Agreements services.
 - It abstracts the core dependencies and runs them in docker using `compose up` commands.
 - These instructions work with the Farming grants repos alongside this directory.
 
@@ -98,7 +98,47 @@ If you're running the full stack there are still some caveats that you need to b
 
 
 
+### AWS emulation (floci)
+
+SQS, SNS and S3 are emulated by [floci](https://floci.io) on `localhost:4566`,
+replacing LocalStack. The whole stack now uses the same emulator as the
+agreements services.
+
+Queues, topics and subscriptions are created by init scripts mounted into the
+`floci` container. They run in lexical order **by filename**, pooled across every
+repo that mounts one in:
+
+| Script | Mounted by |
+|--------|------------|
+| `10-core-resources.sh` | this repo (`compose/floci/ready.d/`) |
+| `50-config-broker.sh` | `grants-config-broker`, only under the `config-broker` profile |
+| `99-ready.sh` | this repo — writes the `/tmp/READY` marker |
+
+The container's healthcheck waits on `/tmp/READY` rather than on the gateway
+responding, because floci starts serving HTTP before the init scripts have
+finished. Services that `depends_on` floci with `condition: service_healthy`
+therefore never start before their queues exist. If you add a script, give it a
+numeric prefix below `99`.
+
+State is in-memory: every `compose up` recreates the resources from scratch.
+
+#### Inspecting queues and topics
+
+The compat image ships the AWS CLI, so the quickest route needs nothing
+installed on the host:
+
+```bash
+docker compose exec floci awslocal sqs list-queues
+docker compose exec floci awslocal sns list-topics
+docker compose exec floci awslocal sqs receive-message \
+  --queue-url $(docker compose exec -T floci awslocal sqs get-queue-url \
+    --queue-name gas__sqs__update_status_fifo.fifo --output text)
+```
+
+Note that queues dead-letter after a single failed receive by default, so
+peeking at a queue can consume the message. Set `MAX_READS=2` in
+`compose/aws.env` and recreate the stack if you need headroom.
+
 ### Improvements/to-do
 
 - pre populate the cw-backend Users collection so we no longer have to run the additional script.
-- check the agreements sqs/sns topics all work as expected. Agreements uses floci and the rest of the stack uses localstack so there may be some fine tuning required in porting over.

@@ -17,6 +17,9 @@ services:
       retries: 5
       start_period: 15s
 
-  localstack:
+  floci:
     volumes:
-      - ../grants-config-broker/compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack-config.sh
+      # grants-config-broker still ships a LocalStack-named init script; it runs
+      # unchanged on floci (awslocal is present in the compat image). The 50-
+      # prefix keeps it between the core resources and the 99-ready.sh marker.
+      - ../grants-config-broker/compose/start-localstack.sh:/etc/floci/init/ready.d/50-config-broker.sh:ro

@@ -1,18 +1,36 @@
 services:
-  localstack:
-    image: localstack/localstack:4.3.0
+  floci:
+    image: floci/floci:1.5.33-compat
     ports:
       - "4566:4566"
     env_file:
       - "compose/aws.env"
     environment:
-      DEBUG: 1
-      LS_LOG: DEBUG
-      SERVICES: s3,sqs,sns,firehose
-      LOCALSTACK_HOST: 127.0.0.1
+      FLOCI_DEFAULT_REGION: eu-west-2
+      # Hostname floci puts in returned QueueUrls, so they stay reachable from
+      # the host. Floci starts every service, so there is no SERVICES list.
+      FLOCI_HOSTNAME: 127.0.0.1
     volumes:
-      - ./tmp/localstack:/var/lib/localstack"
-      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack-core.sh
+      # Mounted as individual files rather than as a directory, because several
+      # repos add scripts to this container (see compose.config-broker.yml, and
+      # grants-ui once it defines its own floci service). Compose merges volumes
+      # by target path, so two repos each mounting a *directory* at the same
+      # target would silently drop one set of scripts.
+      #
+      # Floci pools the scripts from every init directory and runs them ordered
+      # by filename, so the numeric prefixes sequence the whole stack. Keeping
+      # core's scripts in ready.d also leaves start.d free for repos that mount
+      # a directory there. 99-ready.sh must sort last: it writes the marker the
+      # healthcheck waits on, so nothing that depends on floci starts before its
+      # queues and topics exist.
+      - ./compose/floci/ready.d/10-core-resources.sh:/etc/floci/init/ready.d/10-core-resources.sh:ro
+      - ./compose/floci/ready.d/99-ready.sh:/etc/floci/init/ready.d/99-ready.sh:ro
+    healthcheck:
+      test: ["CMD", "stat", "/tmp/READY"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
     networks:
       - cdp-tenant
 
