@@ -140,7 +140,8 @@ create_topic_and_queue "gas__sns__create_agreement_fifo.fifo" "create_agreement_
 
 
 # create_standard_topic "gas__sns__audit_topic_arn" &
-create_standard_topic_and_queue "gas__sns__audit_topic_arn" "fcp_audit_fg_gas_backend"  & # sqs queue name here is for debugging/inspection only 
+create_standard_topic_and_queue "gas__sns__audit_topic_arn" "fcp_audit_fg_gas_backend"  & # sqs queue name here is for debugging/inspection only
+create_standard_topic_and_queue "cw__sns__audit_topic_arn" "fcp_audit_fg_cw_backend" & # sqs queue name here is for debugging/inspection only
 
 # agreements-api
 create_standard_topic "fcp_audit_farming_grants_agreements_api" &
