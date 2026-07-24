@@ -12,8 +12,6 @@ services:
     environment:
       PORT: 3001
       NODE_ENV: development
-      # Variable name is fg-gss-pmf's own and stays until that repo migrates.
-      LOCALSTACK_ENDPOINT: http://floci:4566
     volumes:
       - ../fg-gss-pmf/src:/home/node/src
       - ../fg-gss-pmf/package.json:/home/node/package.json
