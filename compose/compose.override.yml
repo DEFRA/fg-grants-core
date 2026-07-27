@@ -1,10 +1,10 @@
 services:
-  localstack:
+  floci:
     env_file:
       - ../fg-grants-core/compose/aws.env
     volumes:
-      - ../fg-grants-core/tmp/localstack:/var/lib/localstack
-      - ../fg-grants-core/compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack-core.sh
+      - ../fg-grants-core/compose/floci/ready.d/10-core-resources.sh:/etc/floci/init/ready.d/10-core-resources.sh:ro
+      - ../fg-grants-core/compose/floci/ready.d/99-ready.sh:/etc/floci/init/ready.d/99-ready.sh:ro
     networks:
       - cdp-tenant
 
@@ -100,7 +100,7 @@ services:
       - cdp-tenant
     environment:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
-      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_ENDPOINT_URL: http://floci:4566
       GRANT_FUNDING_CALCULATOR_URL: http://fg-gss-pmf:3001
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
@@ -115,10 +115,10 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       OIDC_JWKS_URI: http://entra:3010/jwks
-      AWS_ENDPOINT_URL: http://localstack:4566
-      CREATE_NEW_CASE_SQS_URL: http://localstack:4566/000000000000/create_new_case_fifo.fifo
-      CW__SQS__CREATE_NEW_CASE_URL: http://localstack:4566/000000000000/cw__sqs__create_new_case_fifo.fifo
-      CW__SQS__UPDATE_STATUS_URL: http://localstack:4566/000000000000/cw__sqs__update_status_fifo.fifo
+      AWS_ENDPOINT_URL: http://floci:4566
+      CREATE_NEW_CASE_SQS_URL: http://floci:4566/000000000000/create_new_case_fifo.fifo
+      CW__SQS__CREATE_NEW_CASE_URL: http://floci:4566/000000000000/cw__sqs__create_new_case_fifo.fifo
+      CW__SQS__UPDATE_STATUS_URL: http://floci:4566/000000000000/cw__sqs__update_status_fifo.fifo
 
   fg-cw-frontend:
     environment:
@@ -168,17 +168,17 @@ services:
     profiles:
       - agreements
     depends_on:
-      localstack:
+      floci:
         condition: service_healthy
       mongodb:
         condition: service_healthy
     environment:
-      AWS_ENDPOINT_URL: http://localstack:4566
-      SQS_ENDPOINT: http://localstack:4566
-      QUEUE_URL: http://localstack:4566/000000000000/create_agreement_fifo.fifo
-      SQS_GAS_APPLICATION_STATUS_UPDATED_QUEUE_URL: http://localstack:4566/000000000000/update_agreement_fifo.fifo
-      S3_ENDPOINT: http://localstack:4566
-      SNS_ENDPOINT: http://localstack:4566
+      AWS_ENDPOINT_URL: http://floci:4566
+      SQS_ENDPOINT: http://floci:4566
+      QUEUE_URL: http://floci:4566/000000000000/create_agreement_fifo.fifo
+      SQS_GAS_APPLICATION_STATUS_UPDATED_QUEUE_URL: http://floci:4566/000000000000/update_agreement_fifo.fifo
+      S3_ENDPOINT: http://floci:4566
+      SNS_ENDPOINT: http://floci:4566
       AWS_REGION: eu-west-2
       AWS_DEFAULT_REGION: eu-west-2
       AWS_ACCESS_KEY_ID: test
@@ -204,9 +204,9 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-      mongo-ready: 
+      mongo-ready:
         condition: service_healthy
-      localstack:
+      floci:
         condition: service_healthy
     environment:
       PORT: 3012
