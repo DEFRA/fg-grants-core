@@ -9,7 +9,10 @@ MAX_READS="${MAX_READS:-1}"
 
 function create_topic() {
   local topic_name=$1
-  local topic_arn=$(awslocal sns create-topic \
+  # Declare first, assign second: `local topic_arn=$(...)` would return the exit
+  # status of `local` (always 0) and mask an awslocal failure from `set -e`.
+  local topic_arn
+  topic_arn=$(awslocal sns create-topic \
 	  --name $topic_name \
 	  --attributes '{ "FifoTopic":"true","ContentBasedDeduplication":"true"}' \
 	  --query "TopicArn" \
@@ -19,7 +22,8 @@ function create_topic() {
 
 function create_standard_topic() {
   local topic_name=$1
-  local topic_arn=$(awslocal sns create-topic \
+  local topic_arn
+  topic_arn=$(awslocal sns create-topic \
 	  --name $topic_name \
 	  --query "TopicArn" \
 	  --output text)
@@ -29,14 +33,16 @@ function create_standard_topic() {
 function create_queue() {
   local queue_name=$1
   local base="${queue_name%%.fifo}"
-  local dlq_url=$(
+  local dlq_url
+  dlq_url=$(
     awslocal sqs create-queue \
     --queue-name "$base-dead-letter-queue.fifo" \
     --attributes '{ "FifoQueue":"true", "ContentBasedDeduplication":"true" }' \
     --query "QueueUrl" --output text
   )
 
-  local dlq_arn=$(
+  local dlq_arn
+  dlq_arn=$(
     awslocal sqs get-queue-attributes \
       --queue-url $dlq_url \
       --attribute-name "QueueArn" \
@@ -45,7 +51,8 @@ function create_queue() {
   )
 
   # Create the queue with DLQ attached
-  local queue_url=$(
+  local queue_url
+  queue_url=$(
     awslocal sqs create-queue \
       --queue-name $queue_name \
       --attributes '{ "FifoQueue":"true", "ContentBasedDeduplication":"true", "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$dlq_arn'\",\"maxReceiveCount\":\"'$MAX_READS'\"}" }' \
@@ -53,7 +60,8 @@ function create_queue() {
       --output text
   )
 
-  local queue_arn=$(
+  local queue_arn
+  queue_arn=$(
     awslocal sqs get-queue-attributes \
       --queue-url $queue_url \
       --attribute-name "QueueArn" \
@@ -67,13 +75,15 @@ function create_queue() {
 function create_standard_queue() {
   local queue_name=$1
   # Standard source queue with a standard DLQ (source and DLQ types must match).
-  local dlq_url=$(
+  local dlq_url
+  dlq_url=$(
     awslocal sqs create-queue \
       --queue-name "$queue_name-dead-letter-queue" \
       --query "QueueUrl" --output text
   )
 
-  local dlq_arn=$(
+  local dlq_arn
+  dlq_arn=$(
     awslocal sqs get-queue-attributes \
       --queue-url $dlq_url \
       --attribute-name "QueueArn" \
@@ -82,7 +92,8 @@ function create_standard_queue() {
   )
 
   # Create the queue with DLQ attached
-  local queue_url=$(
+  local queue_url
+  queue_url=$(
     awslocal sqs create-queue \
       --queue-name $queue_name \
       --attributes '{ "RedrivePolicy": "{\"deadLetterTargetArn\":\"'$dlq_arn'\",\"maxReceiveCount\":\"'$MAX_READS'\"}" }' \
@@ -90,7 +101,8 @@ function create_standard_queue() {
       --output text
   )
 
-  local queue_arn=$(
+  local queue_arn
+  queue_arn=$(
     awslocal sqs get-queue-attributes \
       --queue-url $queue_url \
       --attribute-name "QueueArn" \
@@ -112,8 +124,10 @@ function create_topic_and_queue() {
   local topic_name=$1
   local queue_name=$2
 
-  local topic_arn=$(create_topic $topic_name)
-  local queue_arn=$(create_queue $queue_name)
+  local topic_arn
+  topic_arn=$(create_topic $topic_name)
+  local queue_arn
+  queue_arn=$(create_queue $queue_name)
 
   subscribe_queue_to_topic $topic_arn $queue_arn
 }
@@ -122,8 +136,10 @@ function create_standard_topic_and_queue() {
   local topic_name=$1
   local queue_name=$2
 
-  local topic_arn=$(create_standard_topic $topic_name)
-  local queue_arn=$(create_standard_queue $queue_name)
+  local topic_arn
+  topic_arn=$(create_standard_topic $topic_name)
+  local queue_arn
+  queue_arn=$(create_standard_queue $queue_name)
 
   subscribe_queue_to_topic $topic_arn $queue_arn
 }
