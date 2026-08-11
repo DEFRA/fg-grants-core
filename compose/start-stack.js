@@ -10,8 +10,8 @@ const options = {
     profiles: ["grants-ui", "config-broker"],
   },
   agreements: {
-    description: "the agreements-api and agreements-ui projects",
-    targets: ["agreements-api", "agreements-ui"],
+    description: "the agreements API, UI, and PDF projects",
+    targets: ["agreements-api", "agreements-ui", "agreements-pdf"],
     profiles: ["agreements"],
   },
   "gss-pmf": {

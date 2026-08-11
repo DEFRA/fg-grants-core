@@ -119,6 +119,12 @@ function create_standard_queue() {
   echo $queue_arn
 }
 
+function create_bucket() {
+  local bucket_name=$1
+
+  awslocal s3 mb "s3://$bucket_name"
+}
+
 function subscribe_queue_to_topic() {
   local topic_arn=$1
   local queue_arn=$2
@@ -167,6 +173,9 @@ create_topic_and_queue "gas__sns__application_status_updated_fifo.fifo" "gas__sq
 create_topic_and_queue "gas__sns__create_new_case_fifo.fifo" "cw__sqs__create_new_case_fifo.fifo" & pids+=($!)
 create_topic_and_queue "gas__sns__update_case_status_fifo.fifo" "cw__sqs__update_status_fifo.fifo" & pids+=($!)
 create_topic_and_queue "gas__sns__create_agreement_fifo.fifo" "create_agreement_fifo.fifo" & pids+=($!)
+create_standard_topic_and_queue "gfr__sns___config_update" "gas__sqs__config_version_updated" & pids+=($!)
+create_standard_topic_and_queue "gfr__sns___config_update" "cw__sqs__config_version_updated" & pids+=($!)
+create_standard_topic_and_queue "gfr__sns___config_update" "grants_ui_backend__sqs__config_updates" & pids+=($!)
 # create_topic "gas__sns__update_agreement_status_fifo.fifo" &
 
 
@@ -174,11 +183,13 @@ create_topic_and_queue "gas__sns__create_agreement_fifo.fifo" "create_agreement_
 # sqs queue names on the audit topics are for debugging/inspection only
 create_standard_topic_and_queue "gas__sns__audit_topic_arn" "fcp_audit_fg_gas_backend" & pids+=($!)
 create_standard_topic_and_queue "cw__sns__audit_topic_arn" "fcp_audit_fg_cw_backend" & pids+=($!)
+create_standard_topic "fcp_audit_events" & pids+=($!)
 
 # agreements-api
 create_standard_topic "fcp_audit_farming_grants_agreements_api" & pids+=($!)
 create_standard_topic "fcp_audit_farming_grants_agreements_ui" & pids+=($!)
 create_standard_topic "fcp_audit_farming_grants_agreements_pdf" & pids+=($!)
+create_bucket "farming-grants-agreements-pdf-bucket" & pids+=($!)
 create_standard_topic "fcp_audit_grants_payment_service" & pids+=($!)
 create_topic_and_queue "agreement_status_updated_fifo.fifo" "create_agreement_pdf_fifo.fifo" & pids+=($!)
 # create_topic_and_queue "grant_application_approved_fifo.fifo" "create_agreement_fifo.fifo" &
@@ -189,11 +200,11 @@ create_topic "agreement_status_updated_fifo.fifo" & pids+=($!)
 
 for pid in "${pids[@]}"; do
   if ! wait "$pid"; then
-    echo "SNS/SQS setup failed (pid $pid)" >&2
+    echo "AWS resource setup failed (pid $pid)" >&2
     exit 1
   fi
 done
 
 
-echo "SNS/SQS ready"
+echo "AWS resources ready"
 

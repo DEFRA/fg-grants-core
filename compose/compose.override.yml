@@ -47,6 +47,10 @@ services:
       CV_API_STUB_URL: http://grants-ui-dal-stub:3008/graphql
       GAS_API_URL: http://gas:3102
       GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
+      AWS_ENDPOINT_URL: http://floci:4566
+      DEFRA_ID_CLIENT_ID: client_id
+      DEFRA_ID_CLIENT_SECRET: client_secret
+      DEFRA_ID_SERVICE_ID: service_id
 
   grants-ui-backend:
     profiles:
@@ -59,6 +63,8 @@ services:
     environment:
       GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
       GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
+      AWS_ENDPOINT_URL: http://floci:4566
+      CONFIG_INGEST_SQS_QUEUE_URL: http://floci:4566/000000000000/grants_ui_backend__sqs__config_updates
 
   fcp-defra-id-stub:
     profiles:
@@ -75,6 +81,13 @@ services:
       - grants-ui
     networks:
       - cdp-tenant
+
+  # Grants UI still declares its own LocalStack dependency for land grants.
+  # Keep that emulator available without colliding with Floci on host port 4566.
+  localstack:
+    ports: !override
+      - "4567:4566"
+      - "4510-4559:4510-4559"
 
   mockserver:
     profiles:
@@ -101,7 +114,12 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       AWS_ENDPOINT_URL: http://floci:4566
+      GAS__SNS__CREATE_PAYMENT_TOPIC_ARN: arn:aws:sns:eu-west-2:000000000000:create_payment.fifo
+      GAS__SNS__AGREEMENT_STATUS_UPDATED_TOPIC_ARN: arn:aws:sns:eu-west-2:000000000000:agreement_status_updated_fifo.fifo
       GRANT_FUNDING_CALCULATOR_URL: http://fg-gss-pmf:3001
+      VIEW_AGREEMENT_URI: http://host.docker.internal:3300
+      GAS__SQS__CONFIG_VERSION_QUEUE_URL: http://floci:4566/000000000000/gas__sqs__config_version_updated
+      CONFIG_BROKER_S3_BUCKET: configs-bucket
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
       interval: 10s
@@ -114,11 +132,14 @@ services:
       - cdp-tenant
     environment:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
+      SERVICE_VERSION: "0.0.0"
       OIDC_JWKS_URI: http://entra:3010/jwks
       AWS_ENDPOINT_URL: http://floci:4566
       CREATE_NEW_CASE_SQS_URL: http://floci:4566/000000000000/create_new_case_fifo.fifo
       CW__SQS__CREATE_NEW_CASE_URL: http://floci:4566/000000000000/cw__sqs__create_new_case_fifo.fifo
       CW__SQS__UPDATE_STATUS_URL: http://floci:4566/000000000000/cw__sqs__update_status_fifo.fifo
+      CW__SQS__CONFIG_VERSION_QUEUE_URL: http://floci:4566/000000000000/cw__sqs__config_version_updated
+      CONFIG_BROKER_S3_BUCKET: configs-bucket
 
   fg-cw-frontend:
     environment:
@@ -184,6 +205,7 @@ services:
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
       MONGO_URI: mongodb://mongodb:27017/
+      VIEW_AGREEMENT_URI: http://host.docker.internal:3300
       TOPIC_ARN: arn:aws:sns:eu-west-2:000000000000:grant_application_approved_fifo.fifo
       LAND_GRANTS_BASE_URL: http://host.docker.internal:3009
       SEED_DB: false
@@ -195,6 +217,10 @@ services:
       - agreements
     networks:
       - cdp-tenant
+    environment:
+      AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
+      GAS_BACKEND_URL: http://gas:3102
+      GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
 
   grants-config-broker:
     profiles:
@@ -210,6 +236,20 @@ services:
         condition: service_healthy
     environment:
       PORT: 3012
+      AWS_ACCESS_KEY_ID: test
+      AWS_ENDPOINT_URL: http://floci:4566
+      AWS_REGION: eu-west-2
+      AWS_SECRET_ACCESS_KEY: test
+      CONFIG_INPUT_QUEUE_URL: http://floci:4566/000000000000/gfr__sqs___config_input
+      MONGO_URI: mongodb://mongodb:27017/
+    volumes:
+      - ${CONFIG_BROKER_PACKAGES_DIR:-../grants-config-broker/compose}:/home/node/config
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3012/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   redis:
     restart: always
