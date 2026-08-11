@@ -14,6 +14,7 @@
   /grants-ui (optional)
   /farming-grants-agreements-api (optional)
   /farming-grants-agreements-ui (optional)
+  /farming-grants-agreements-pdf (optional)
   /fg-gss-pmf (optional)
   /grants-config-broker (optional)
 ```
@@ -45,7 +46,7 @@ Available options:
 |--------|-------------|
 | `cw` | All Case Working applications including GAS and the grants platform admin app |
 | `grants-ui` | grants-ui and its dependencies |
-| `agreements` | agreements-api and agreements-ui |
+| `agreements` | agreements-api, agreements-ui and agreements-pdf |
 | `gss-pmf` | Pigs Might Fly grant funding calculator |
 | `config-broker` | grants-config-broker (local build) |
 
@@ -96,7 +97,21 @@ If you're running the full stack there are still some caveats that you need to b
 - Once you have submitted the application, log in to case working frontend - http://localhost:3100 (see Setting up user access)
 - Once you have a generated agreement you'll need to run ```node scripts/fix-local-agreements-url.js``` in fg-cw-backend to update the agreements-ui endpoint for local development if you want to view the agreement as a case-worker would. This is because the endpoint is hardcoded into the workflow definition for each env so points to a non-local environment.
 
+When the `agreements` option is enabled, accepting an Agreement publishes its lifecycle event to the PDF service. The generated PDF is stored in Floci S3. List generated files with:
 
+```bash
+docker compose exec floci awslocal s3 ls \
+  s3://farming-grants-agreements-pdf-bucket --recursive
+```
+
+Download a listed PDF by replacing `<key>`:
+
+```bash
+docker compose exec floci awslocal s3 cp \
+  s3://farming-grants-agreements-pdf-bucket/<key> \
+  /tmp/agreement.pdf
+docker cp fg-grants-core-floci-1:/tmp/agreement.pdf ./agreement.pdf
+```
 
 ### AWS emulation (floci)
 

@@ -1,0 +1,40 @@
+services:
+  farming-grants-agreements-pdf:
+    build:
+      context: ../farming-grants-agreements-pdf
+      target: development
+    profiles:
+      - agreements
+    ports:
+      - "3556:3556"
+    env_file:
+      - compose/aws.env
+    environment:
+      PORT: 3556
+      NODE_ENV: development
+      ALLOWED_DOMAINS: host.docker.internal
+      AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
+      SQS_ENDPOINT: http://floci:4566
+      QUEUE_URL: http://floci:4566/000000000000/create_agreement_pdf_fifo.fifo
+      SNS_ENDPOINT: http://floci:4566
+      SNS_TOPIC_ARN_AUDIT: arn:aws:sns:eu-west-2:000000000000:fcp_audit_farming_grants_agreements_pdf
+      S3_ENDPOINT: http://floci:4566
+      S3_BUCKET: farming-grants-agreements-pdf-bucket
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+      TMP_PDF_FOLDER: /var/tmp/defra-pdf
+    depends_on:
+      floci:
+        condition: service_healthy
+      farming-grants-agreements-ui:
+        condition: service_started
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - cdp-tenant
+    develop:
+      watch:
+        - path: ../farming-grants-agreements-pdf/src
+          target: /home/node/src
+          action: sync+restart
+        - path: ../farming-grants-agreements-pdf/package.json
+          action: rebuild
