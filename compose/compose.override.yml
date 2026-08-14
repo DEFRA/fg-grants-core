@@ -102,6 +102,8 @@ services:
       MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
       AWS_ENDPOINT_URL: http://floci:4566
       GRANT_FUNDING_CALCULATOR_URL: http://fg-gss-pmf:3001
+      GAS__SQS__CONFIG_VERSION_QUEUE_URL: http://floci:4566/000000000000/gas__sqs__config_version_updated
+      CONFIG_BROKER_S3_BUCKET: configs-bucket
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
       interval: 10s
@@ -119,6 +121,8 @@ services:
       CREATE_NEW_CASE_SQS_URL: http://floci:4566/000000000000/create_new_case_fifo.fifo
       CW__SQS__CREATE_NEW_CASE_URL: http://floci:4566/000000000000/cw__sqs__create_new_case_fifo.fifo
       CW__SQS__UPDATE_STATUS_URL: http://floci:4566/000000000000/cw__sqs__update_status_fifo.fifo
+      CW__SQS__CONFIG_VERSION_QUEUE_URL: http://floci:4566/000000000000/cw__sqs__config_version_updated
+      CONFIG_BROKER_S3_BUCKET: configs-bucket
 
   fg-cw-frontend:
     environment:
@@ -210,6 +214,17 @@ services:
         condition: service_healthy
     environment:
       PORT: 3012
+      MONGO_URI: mongodb://mongodb:27017/
+      MONGO_DATABASE: grants-config-broker
+      AWS_ENDPOINT_URL: http://floci:4566
+      AWS_REGION: eu-west-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      GFR__SNS__CONFIG_UPDATE_TOPIC_ARN: arn:aws:sns:eu-west-2:000000000000:gfr__sns___config_update
+      CONFIG_BUCKET_NAME: configs-bucket
+      CONFIG_INPUT_QUEUE_URL: http://floci:4566/000000000000/gfr__sqs___config_input
+      SERVICE_AUTH_ENABLED: false
+      AUDIT_ENABLED: false
 
   redis:
     restart: always

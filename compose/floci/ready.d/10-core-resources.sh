@@ -150,6 +150,9 @@ function create_standard_topic_and_queue() {
   subscribe_queue_to_topic $topic_arn $queue_arn
 }
 
+# S3 bucket for config broker
+awslocal s3 mb s3://configs-bucket 2>/dev/null || true
+
 # Every job is backgrounded to create resources in parallel, and each PID is
 # collected so failures can be waited on individually. A bare `wait` always
 # returns 0 regardless of what the jobs did, so `set -e` would not catch a
@@ -186,6 +189,11 @@ create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agr
 create_topic_and_queue "create_payment.fifo" "gps__sqs__create_payment.fifo" & pids+=($!)
 create_topic_and_queue "cancel_payment.fifo" "gps__sqs__cancel_payment.fifo" & pids+=($!)
 create_topic "agreement_status_updated_fifo.fifo" & pids+=($!)
+
+# Config broker: input queue + fan-out topic to GAS and CW subscriber queues
+create_standard_queue "gfr__sqs___config_input" & pids+=($!)
+create_standard_topic_and_queue "gfr__sns___config_update" "gas__sqs__config_version_updated" & pids+=($!)
+create_standard_topic_and_queue "gfr__sns___config_update" "cw__sqs__config_version_updated" & pids+=($!)
 
 for pid in "${pids[@]}"; do
   if ! wait "$pid"; then
