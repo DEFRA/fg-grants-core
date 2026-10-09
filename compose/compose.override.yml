@@ -138,14 +138,6 @@ services:
       AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
       AGREEMENTS_PROXY_TIMEOUT_MS: 30000
 
-  # fg-grants-platform-admin:
-  #   networks:
-  #     - cdp-tenant
-  #   environment:
-  #     REDIS_HOST: redis
-  #     OIDC_DISCOVERY_URI: http://entra:3010/.well-known/openid-configuration
-  #     OIDC_CLIENT_ID: fg-grants-platform-admin
-
   # Seeds a dev token into fg-cw-backend so fg-grants-platform-admin can call
   # the CW roles endpoint (GET /api/users/{entraId}/roles).
   # Raw token (platform-admin: CW_SERVICE_TOKEN): a1b2c3d4-e5f6-7890-abcd-ef1234567890
@@ -166,6 +158,28 @@ services:
     volumes:
       - ./compose/seed-cw-gpa-token.sh:/seed-cw-gpa-token.sh:ro
     entrypoint: ["/bin/bash", "/seed-cw-gpa-token.sh"]
+    restart: "no"
+
+  # Seeds a dev token into fg-gas-backend so fg-grants-platform-admin can call
+  # the grant-admin routes (which require client = 'fg-grants-platform-admin').
+  # Raw token (platform-admin: GAS_SERVICE_TOKEN): gpa-gas-test-token-001
+  gas-seed-gpa-token:
+    image: mongo:7.0
+    container_name: gas-seed-gpa-token
+    networks:
+      - cdp-tenant
+    depends_on:
+      mongo-ready:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      gas:
+        condition: service_healthy
+    environment:
+      TOKEN_HASH: c26319bc3d61c048de4d1719999665dcafa326341ed1c6e0611a1a90389492f0
+    volumes:
+      - ./compose/seed-gas-gpa-token.sh:/seed-gas-gpa-token.sh:ro
+    entrypoint: ["/bin/bash", "/seed-gas-gpa-token.sh"]
     restart: "no"
 
   # Seeds the pre-minted dev token hash so grants-ui can authenticate with GAS
