@@ -86,7 +86,7 @@ services:
     # (i.e. pigs-might-fly's fg-gss-pmf calculator) have nothing to resolve
     # to locally. start-stack.js sets MOCKSERVER_INIT_PATH to add a second
     # expectations file on top of grants-ui's own when cw+grants-ui both run,
-    # without touching grants-ui's compose/mockserver/expectations.json. 
+    # without touching grants-ui's compose/mockserver/expectations.json.
     # This has to live here (not compose.gas.yml) since compose.override.yml is
     # guaranteed to merge last regardless of arg order, and grants-ui's own
     # compose.yml sets this same env var unconditionally.
@@ -104,6 +104,8 @@ services:
       GRANT_FUNDING_CALCULATOR_URL: http://fg-gss-pmf:3001
       GAS__SQS__CONFIG_VERSION_QUEUE_URL: http://floci:4566/000000000000/gas__sqs__config_version_updated
       CONFIG_BROKER_S3_BUCKET: configs-bucket
+      CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
+      ENVIRONMENT: ${ENVIRONMENT:-local}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
       interval: 10s
@@ -123,6 +125,8 @@ services:
       CW__SQS__UPDATE_STATUS_URL: http://floci:4566/000000000000/cw__sqs__update_status_fifo.fifo
       CW__SQS__CONFIG_VERSION_QUEUE_URL: http://floci:4566/000000000000/cw__sqs__config_version_updated
       CONFIG_BROKER_S3_BUCKET: configs-bucket
+      CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
+      ENVIRONMENT: ${ENVIRONMENT:-local}
 
   fg-cw-frontend:
     environment:
@@ -134,13 +138,49 @@ services:
       AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
       AGREEMENTS_PROXY_TIMEOUT_MS: 30000
 
-  fg-grants-platform-admin:
+  # Seeds a dev token into fg-cw-backend so fg-grants-platform-admin can call
+  # the CW roles endpoint (GET /api/users/{entraId}/roles).
+  # Raw token (platform-admin: CW_SERVICE_TOKEN): a1b2c3d4-e5f6-7890-abcd-ef1234567890
+  cw-seed-gpa-token:
+    image: mongo:7.0
+    container_name: cw-seed-gpa-token
     networks:
       - cdp-tenant
+    depends_on:
+      mongo-ready:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      fg-cw-backend:
+        condition: service_healthy
     environment:
-      REDIS_HOST: redis
-      OIDC_DISCOVERY_URI: http://entra:3010/.well-known/openid-configuration
-      OIDC_CLIENT_ID: fg-grants-platform-admin
+      TOKEN_HASH: a447ee1578a84992cb7a7ce115d8c83d9a3a600d9ecb42c1638321e696418bce
+    volumes:
+      - ./compose/seed-cw-gpa-token.sh:/seed-cw-gpa-token.sh:ro
+    entrypoint: ["/bin/bash", "/seed-cw-gpa-token.sh"]
+    restart: "no"
+
+  # Seeds a dev token into fg-gas-backend so fg-grants-platform-admin can call
+  # the grant-admin routes (which require client = 'fg-grants-platform-admin').
+  # Raw token (platform-admin: GAS_SERVICE_TOKEN): gpa-gas-test-token-001
+  gas-seed-gpa-token:
+    image: mongo:7.0
+    container_name: gas-seed-gpa-token
+    networks:
+      - cdp-tenant
+    depends_on:
+      mongo-ready:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      gas:
+        condition: service_healthy
+    environment:
+      TOKEN_HASH: c26319bc3d61c048de4d1719999665dcafa326341ed1c6e0611a1a90389492f0
+    volumes:
+      - ./compose/seed-gas-gpa-token.sh:/seed-gas-gpa-token.sh:ro
+    entrypoint: ["/bin/bash", "/seed-gas-gpa-token.sh"]
+    restart: "no"
 
   # Seeds the pre-minted dev token hash so grants-ui can authenticate with GAS
   # without needing to run scripts/mint-access-token.js manually.
@@ -229,7 +269,7 @@ services:
   redis:
     restart: always
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
