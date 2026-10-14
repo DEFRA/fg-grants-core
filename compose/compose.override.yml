@@ -106,6 +106,10 @@ services:
       CONFIG_BROKER_S3_BUCKET: configs-bucket
       CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
       ENVIRONMENT: ${ENVIRONMENT:-local}
+      CW_BACKEND_URL: http://fg-cw-backend:3101
+      # The raw local token for GAS to call fg-cw-backend; fg-cw-backend seeds
+      # its hash from SERVICE_ACCESS_TOKEN_HASH below.
+      CW_BACKEND_TOKEN: 9c05f401-94eb-4e95-8b98-111a2048f4c2
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
       interval: 10s
@@ -127,6 +131,9 @@ services:
       CONFIG_BROKER_S3_BUCKET: configs-bucket
       CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
       ENVIRONMENT: ${ENVIRONMENT:-local}
+      # Seeded on boot so GAS can call the CW roles endpoint.
+      # Raw token (gas: CW_BACKEND_TOKEN): 9c05f401-94eb-4e95-8b98-111a2048f4c2
+      SERVICE_ACCESS_TOKEN_HASH: fg-gas-backend:919da0b26f9260ad69fd6a57a71df612d4fb556ccb8628c7a8e18f7e0e718572
 
   fg-cw-frontend:
     environment:
@@ -137,28 +144,6 @@ services:
       AGREEMENTS_BASE_URL: /agreement
       AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
       AGREEMENTS_PROXY_TIMEOUT_MS: 30000
-
-  # Seeds a dev token into fg-cw-backend so fg-grants-platform-admin can call
-  # the CW roles endpoint (GET /api/users/{entraId}/roles).
-  # Raw token (platform-admin: CW_SERVICE_TOKEN): a1b2c3d4-e5f6-7890-abcd-ef1234567890
-  cw-seed-gpa-token:
-    image: mongo:7.0
-    container_name: cw-seed-gpa-token
-    networks:
-      - cdp-tenant
-    depends_on:
-      mongo-ready:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-      fg-cw-backend:
-        condition: service_healthy
-    environment:
-      TOKEN_HASH: a447ee1578a84992cb7a7ce115d8c83d9a3a600d9ecb42c1638321e696418bce
-    volumes:
-      - ./compose/seed-cw-gpa-token.sh:/seed-cw-gpa-token.sh:ro
-    entrypoint: ["/bin/bash", "/seed-cw-gpa-token.sh"]
-    restart: "no"
 
   # Seeds a dev token into fg-gas-backend so fg-grants-platform-admin can call
   # the grant-admin routes (which require client = 'fg-grants-platform-admin').
