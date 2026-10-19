@@ -61,7 +61,19 @@ npm run stack cw grants-ui agreements gss-pmf
 npm run stack cw grants-ui config-broker
 ```
 
-Run `npm run stack` with no arguments to see the help output.
+Flags:
+
+| Flag | Description |
+|------|-------------|
+| `--grants <grant,...>` | Only load these grant configs (default: every local grant). Also `GRANTS=...` |
+| `--keep-grants` | Reuse the grant configs from the last run instead of rebuilding. Also `KEEP_GRANTS=1` |
+
+```bash
+npm run stack cw grants-ui --grants woodland
+```
+
+See [Grant configs](#grant-configs) for details. Run `npm run stack` with no
+arguments to see the help output.
 
 ### Grant configs
 
