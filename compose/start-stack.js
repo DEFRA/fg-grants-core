@@ -13,7 +13,7 @@ const options = {
     profiles: [],
   },
   "grants-ui": {
-    description: "grants-ui and its dependencies",
+    description: "grants-ui and its dependencies (needs cw)",
     targets: ["grants-ui", "land-grants"],
     profiles: ["grants-ui"],
   },
@@ -119,6 +119,14 @@ function main() {
   if (unknown.length > 0) {
     console.error(`Unknown option(s): ${unknown.join(", ")}`);
     showHelp();
+    process.exit(1);
+  }
+
+  // grants-ui submits to GAS, which only the cw option brings up.
+  if (args.includes("grants-ui") && !args.includes("cw")) {
+    console.error(
+      "grants-ui needs cw (GAS): run npm run stack cw grants-ui instead.",
+    );
     process.exit(1);
   }
 

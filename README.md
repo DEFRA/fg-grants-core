@@ -47,7 +47,7 @@ Available options:
 | Option | Description |
 |--------|-------------|
 | `cw` | All Case Working applications including GAS and the grants platform admin app |
-| `grants-ui` | grants-ui and its dependencies |
+| `grants-ui` | grants-ui and its dependencies (needs `cw`) |
 | `agreements` | agreements-api and agreements-ui |
 | `gss-pmf` | Pigs Might Fly grant funding calculator |
 | `config-broker` | grants-config-broker (local build) |
