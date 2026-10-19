@@ -65,11 +65,11 @@ Flags:
 
 | Flag | Description |
 |------|-------------|
-| `--grants <grant,...>` | Only load these grant configs (default: every local grant). Also `GRANTS=...` |
+| `--grants=<grant,...>` | Only load these grant configs (default: every local grant). Also `GRANTS=...` |
 | `--keep-grants` | Reuse the grant configs from the last run instead of rebuilding. Also `KEEP_GRANTS=1` |
 
 ```bash
-npm run stack cw grants-ui --grants woodland
+npm run stack cw grants-ui --grants=woodland
 ```
 
 See [Grant configs](#grant-configs) for details. Run `npm run stack` with no
@@ -88,10 +88,18 @@ By default every local grant is used. To run with only the grants you are
 working on:
 
 ```bash
-npm run stack cw --grants woodland
+npm run stack cw --grants=woodland
 npm run stack cw grants-ui --grants=woodland,pigs-might-fly
 GRANTS=woodland npm run stack cw
 ```
+
+`--grants woodland pigs-might-fly` (with spaces) also works, but prefer `=`:
+npm swallows the flag itself, so the script has to treat every argument that
+isn't a stack option as a grant name.
+
+`--grants` only limits what the broker publishes on this run. Grants deployed
+on earlier runs stay in Mongo, so GAS and grants-ui still see them until you
+remove the volume with `docker compose down -v`.
 
 The configs are written to `compose/config-broker-local/` (gitignored) and
 rebuilt on every run, so changes in your config repos are picked up on
