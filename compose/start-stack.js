@@ -158,6 +158,7 @@ function main() {
   // The config broker serves grant configs built from the local
   // grants-config-* repos, rebuilt on every run unless --keep-grants is set
   const env = { ...process.env };
+  env.CONFIG_BROKER_SERVICE_VERSION = `local-${Date.now()}-${process.pid}`;
   try {
     if (keepGrants && grants.length > 0) {
       console.log("--grants given, so ignoring --keep-grants.");

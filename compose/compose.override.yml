@@ -269,6 +269,7 @@ services:
       floci:
         condition: service_healthy
     environment:
+      SERVICE_VERSION: ${CONFIG_BROKER_SERVICE_VERSION}
       PORT: 3012
       MONGO_URI: mongodb://mongodb:27017/
       MONGO_DATABASE: grants-config-broker
