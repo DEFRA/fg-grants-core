@@ -5,7 +5,11 @@ services:
     image: floci/floci:1.5.33-compat
     env_file:
       - ../fg-grants-core/compose/aws.env
+    # Repeated from compose.yml so grants-ui's floci definition can't drop it.
+    environment:
+      FLOCI_STORAGE_SERVICES_S3_MODE: persistent
     volumes:
+      - floci-data:/app/data
       - ../fg-grants-core/compose/floci/ready.d/10-core-resources.sh:/etc/floci/init/ready.d/10-core-resources.sh:ro
       - ../fg-grants-core/compose/floci/ready.d/99-ready.sh:/etc/floci/init/ready.d/99-ready.sh:ro
     # grants-ui's compose file sets a healthcheck on /tmp/READY, which its own

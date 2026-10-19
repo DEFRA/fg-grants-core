@@ -180,7 +180,12 @@ The marker has its own name because grants-ui's `start.d` scripts write
 `/tmp/READY`, and floci runs every `start.d` script before any `ready.d` one. If
 you add a script, give it a numeric prefix below `99`.
 
-State is in-memory: every `compose up` recreates the resources from scratch.
+SNS and SQS are in-memory: every `compose up` recreates the queues and topics
+from scratch. S3 is kept on the `floci-data` volume, so it lives as long as the
+Mongo data does. The config broker records the grant versions it has uploaded
+in Mongo and won't upload them again, so the two must be cleared together:
+`docker compose down -v` removes both. If you remove one volume by hand, remove
+the other too.
 
 #### Inspecting queues and topics
 
