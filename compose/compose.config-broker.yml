@@ -1,16 +1,21 @@
+# Builds grants-config-broker from the local checkout instead of running the
+# pinned image (see compose.override.yml), for working on the broker itself.
+# start-stack.js adds this file after compose.override.yml so these settings
+# win.
 services:
   grants-config-broker:
-    profiles:
-      - config-broker
+    # A local tag, so the build doesn't overwrite the pinned image.
+    image: grants-config-broker:local
     pull_policy: never
     build:
       context: ../grants-config-broker
       target: development
     volumes:
       - ../grants-config-broker/src:/home/node/src
-      - ${CONFIG_BROKER_PACKAGES_DIR:-../grants-config-broker/compose}:/home/node/config
+      - ${CONFIG_BROKER_PACKAGES_DIR:-./compose/config-broker-local}:/home/node/config
       - ../grants-config-broker/package.json:/home/node/package.json
     healthcheck:
+      # The development image has wget but not curl.
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3012/health"]
       interval: 10s
       timeout: 5s

@@ -26,7 +26,7 @@ services:
       - ./compose/floci/ready.d/10-core-resources.sh:/etc/floci/init/ready.d/10-core-resources.sh:ro
       - ./compose/floci/ready.d/99-ready.sh:/etc/floci/init/ready.d/99-ready.sh:ro
     healthcheck:
-      test: ["CMD", "stat", "/tmp/READY"]
+      test: ["CMD", "stat", "/tmp/FG_GRANTS_CORE_READY"]
       interval: 5s
       timeout: 3s
       retries: 20

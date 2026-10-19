@@ -1,3 +1,5 @@
 include:
-  - path: ../grants-ui/compose.yml
+  - path:
+      - ../grants-ui/compose.infra.yml
+      - ../grants-ui/compose.grants-ui.yml
     project_directory: ../grants-ui
