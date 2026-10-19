@@ -155,12 +155,29 @@ function bumpPatch(version) {
   return `${major}.${minor}.${patch + 1}`;
 }
 
+// Only a missing file means a fresh start. Anything else has to stop the run:
+// treating an unreadable history as empty can hand out a version Mongo
+// already holds, and the broker would then skip the changed config.
 function readVersions() {
+  let versions;
   try {
-    return JSON.parse(fs.readFileSync(VERSIONS_FILE, "utf8"));
-  } catch {
-    return {};
+    versions = JSON.parse(fs.readFileSync(VERSIONS_FILE, "utf8"));
+  } catch (error) {
+    if (error.code === "ENOENT") return {};
+    throw new Error(versionsFileError(error.message));
   }
+  if (!versions || typeof versions !== "object" || Array.isArray(versions)) {
+    throw new Error(versionsFileError("expected a JSON object"));
+  }
+  return versions;
+}
+
+function versionsFileError(reason) {
+  return [
+    `Could not read ${VERSIONS_FILE}: ${reason}`,
+    "Fix the file, or delete it and reset the stack with",
+    "docker compose -p fg-grants-core down -v",
+  ].join("\n");
 }
 
 // The broker and its consumers use the highest active version of a grant, so
@@ -230,8 +247,8 @@ function prepareGrantConfigs(requestedGrants = []) {
     requestedGrants.length > 0 ? requestedGrants : [...grants.keys()].sort();
   const selected = names.map((grant) => ({ grant, repo: grants.get(grant) }));
 
-  emptyOutputDir();
   const versions = readVersions();
+  emptyOutputDir();
   for (const entry of selected) {
     const { grant, repo } = entry;
     const staging = path.join(OUTPUT_DIR, `.${grant}`);
