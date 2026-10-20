@@ -168,9 +168,18 @@ repo that mounts one in:
 
 | Script | Mounted by |
 |--------|------------|
-| `10-core-resources.sh` | this repo (`compose/floci/ready.d/`) |
+| `10-core-resources.sh` | this repo (`compose/floci/ready.d/`) — resources for the non-fg services (agreements, payments, audit, config broker) |
+| `20-gas-resources.sh` | `fg-gas-backend`'s own setup script, with the `cw` option |
+| `21-cw-resources.sh` | `fg-cw-backend`'s own setup script, with the `cw` option |
 | `50-config-broker.sh` | `grants-config-broker`, only with the `config-broker` option (local build) |
 | `99-ready.sh` | this repo — writes the `/tmp/FG_GRANTS_CORE_READY` marker |
+
+Each fg backend creates its own queues and topics, so a new queue goes in that
+backend's `compose/floci/start.d/10-setup-resources.sh`, not here. Several
+scripts create the same queue or topic (for example a GAS topic feeding a CW
+queue), so they must use the same attributes: floci refuses a queue created
+again with different attributes, and silently keeps the first attributes for a
+topic.
 
 The container's healthcheck waits on `/tmp/FG_GRANTS_CORE_READY` rather than on
 the gateway responding, because floci starts serving HTTP before the init

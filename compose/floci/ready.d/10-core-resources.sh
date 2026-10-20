@@ -162,62 +162,42 @@ awslocal s3 mb s3://configs-bucket 2>/dev/null || true
 # that refuses to start and says why.
 pids=()
 
-create_topic_and_queue "cw__sns__case_status_updated_fifo.fifo" "gas__sqs__update_status_fifo.fifo" & pids+=($!)
-create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agreement_status_fifo.fifo" & pids+=($!)
-create_topic_and_queue "agreement_status_updated_fifo.fifo" "gas__sqs__update_agreement_status_fifo.fifo" & pids+=($!)
-create_topic_and_queue "gas__sns__grant_application_created_fifo.fifo" "gas__sqs__handle_grant_application_created_fifo.fifo" & pids+=($!)
-create_topic_and_queue "gas__sns__application_status_updated_fifo.fifo" "gas__sqs__application_status_updated_fifo.fifo" & pids+=($!)
-create_topic_and_queue "gas__sns__create_new_case_fifo.fifo" "cw__sqs__create_new_case_fifo.fifo" & pids+=($!)
-create_topic_and_queue "gas__sns__update_case_status_fifo.fifo" "cw__sqs__update_status_fifo.fifo" & pids+=($!)
-create_topic_and_queue "gas__sns__create_agreement_fifo.fifo" "create_agreement_fifo.fifo" & pids+=($!)
-# fg-gas-backend publishes agreement status changes on its own topic, fanned
-# out to the same queues as agreements-api's agreement_status_updated_fifo.fifo
-# (see fg-gas-backend's create_agreement_status_fanout).
-create_topic_and_queue "gas__sns__agreement_status_updated_fifo.fifo" "gas__sqs__update_agreement_status_fifo.fifo" & pids+=($!)
-create_topic_and_queue "gas__sns__agreement_status_updated_fifo.fifo" "create_agreement_pdf_fifo.fifo" & pids+=($!)
-# fg-cw-backend publishes case-created events. The queue is for
-# debugging/inspection only.
-create_topic_and_queue "cw__sns__case_created_fifo.fifo" "cw__sqs__case_created_fifo.fifo" & pids+=($!)
-# create_topic "gas__sns__update_agreement_status_fifo.fifo" &
+# fg-gas-backend and fg-cw-backend create their own queues and topics: their
+# setup scripts are mounted into this container as ready.d/20-gas-resources.sh
+# and ready.d/21-cw-resources.sh (see compose.gas.yml and
+# compose.cw-backend.yml). This script only creates what the non-fg services
+# need, including their subscriptions to fg topics. Several queues and topics
+# are created by more than one script, so their attributes must match: floci
+# rejects a queue created again with different attributes, and keeps the first
+# attributes for a topic.
 
-
-# create_standard_topic "gas__sns__audit_topic_arn" &
-# sqs queue names on the audit topics are for debugging/inspection only
+# Audit. The queues on the fg audit topics are for debugging/inspection only.
 create_standard_topic_and_queue "gas__sns__audit_topic_arn" "fcp_audit_fg_gas_backend" & pids+=($!)
 create_standard_topic_and_queue "cw__sns__audit_topic_arn" "fcp_audit_fg_cw_backend" & pids+=($!)
-
-# agreements-api
 create_standard_topic "fcp_audit_farming_grants_agreements_api" & pids+=($!)
 create_standard_topic "fcp_audit_farming_grants_agreements_ui" & pids+=($!)
 create_standard_topic "fcp_audit_farming_grants_agreements_pdf" & pids+=($!)
 create_standard_topic "fcp_audit_grants_payment_service" & pids+=($!)
+
+# agreements-api
+create_topic_and_queue "agreement_status_updated_fifo.fifo" "gas__sqs__update_agreement_status_fifo.fifo" & pids+=($!)
 create_topic_and_queue "agreement_status_updated_fifo.fifo" "create_agreement_pdf_fifo.fifo" & pids+=($!)
-# create_topic_and_queue "grant_application_approved_fifo.fifo" "create_agreement_fifo.fifo" &
 create_topic_and_queue "gas__sns__update_agreement_status_fifo.fifo" "update_agreement_fifo.fifo" & pids+=($!)
+
+# grants-payment-service
 create_topic_and_queue "create_payment.fifo" "gps__sqs__create_payment.fifo" & pids+=($!)
 create_topic_and_queue "cancel_payment.fifo" "gps__sqs__cancel_payment.fifo" & pids+=($!)
 
-# fg-gas-backend publishes its own create-payment events on its own topic,
-# rather than on the agreements-api "create_payment.fifo" topic above. The
-# queue is for debugging/inspection only.
-create_topic_and_queue "gas__sns__create_payment_fifo.fifo" "create_payment_fifo.fifo" & pids+=($!)
-create_topic "agreement_status_updated_fifo.fifo" & pids+=($!)
-
-# Config broker: input queue + fan-out topic to GAS and CW subscriber queues.
-# The broker runs in every stack, so its resources are created here rather
-# than by its own init script (mounted only with the config-broker option).
+# Config broker: its input queue and topics. The broker runs in every stack, so
+# its resources are created here rather than by its own init script (mounted
+# only with the config-broker option). GAS and CW subscribe their own queues to
+# gfr__sns___config_update.
 create_standard_queue "gfr__sqs___config_input" & pids+=($!)
+create_standard_topic "gfr__sns___config_update" & pids+=($!)
 # Same attributes as grants-config-broker's own script, which also creates it
 # when the broker is built locally.
 awslocal sns create-topic --name "gfr__sns__feature_control.fifo" \
   --attributes FifoTopic=true >/dev/null & pids+=($!)
-create_standard_topic_and_queue "gfr__sns___config_update" "gas__sqs__config_version_updated" & pids+=($!)
-create_standard_topic_and_queue "gfr__sns___config_update" "cw__sqs__config_version_updated" & pids+=($!)
-
-# Reporting events published by fg-gas-backend. GAS requires the topic ARN in
-# its config, but not the topic itself: without it GAS still starts, and
-# publishing agreement reporting events fails.
-create_standard_topic "gfr__sns___reporting_events" & pids+=($!)
 
 for pid in "${pids[@]}"; do
   if ! wait "$pid"; then
