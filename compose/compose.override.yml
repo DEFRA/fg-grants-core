@@ -110,14 +110,12 @@ services:
     environment:
       MOCKSERVER_INITIALIZATION_JSON_PATH: ${MOCKSERVER_INIT_PATH:-/config/expectations.json}
 
+  # fg-* services set their own container env in their compose/compose.<svc>.yml.
+  # Only values that depend on the rest of this stack are set here.
   gas:
-    networks:
-      - cdp-tenant
     environment:
-      MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
-      AWS_ENDPOINT_URL: http://floci:4566
       GRANT_FUNDING_CALCULATOR_URL: http://fg-gss-pmf:3001
-      GAS__SQS__CONFIG_VERSION_QUEUE_URL: http://floci:4566/000000000000/gas__sqs__config_version_updated
+      # The bucket the config broker deploys to in this stack.
       CONFIG_BROKER_S3_BUCKET: configs-bucket
       CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
       ENVIRONMENT: ${ENVIRONMENT:-local}
@@ -125,24 +123,9 @@ services:
       # The raw local token for GAS to call fg-cw-backend; fg-cw-backend seeds
       # its hash from SERVICE_ACCESS_TOKEN_HASH below.
       CW_BACKEND_TOKEN: 9c05f401-94eb-4e95-8b98-111a2048f4c2
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:3102/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
 
   fg-cw-backend:
-    networks:
-      - cdp-tenant
     environment:
-      MONGO_URI: mongodb://mongodb:27017/?replicaSet=mongoRepl
-      OIDC_JWKS_URI: http://entra:3010/jwks
-      AWS_ENDPOINT_URL: http://floci:4566
-      CREATE_NEW_CASE_SQS_URL: http://floci:4566/000000000000/create_new_case_fifo.fifo
-      CW__SQS__CREATE_NEW_CASE_URL: http://floci:4566/000000000000/cw__sqs__create_new_case_fifo.fifo
-      CW__SQS__UPDATE_STATUS_URL: http://floci:4566/000000000000/cw__sqs__update_status_fifo.fifo
-      CW__SQS__CONFIG_VERSION_QUEUE_URL: http://floci:4566/000000000000/cw__sqs__config_version_updated
       CONFIG_BROKER_S3_BUCKET: configs-bucket
       CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
       ENVIRONMENT: ${ENVIRONMENT:-local}
@@ -152,8 +135,6 @@ services:
 
   fg-cw-frontend:
     environment:
-      NODE_ENV: development
-      LOG_FORMAT: ecs
       AGREEMENTS_UI_URL: http://host.docker.internal:3300
       AGREEMENTS_UI_TOKEN: your-agreements-ui-token
       AGREEMENTS_BASE_URL: /agreement
