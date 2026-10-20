@@ -119,6 +119,21 @@ restart. To reuse the configs from the last run instead, add `--keep-grants`
   instead of using the pinned image, for working on the broker itself.
 
 
+### Infrastructure drift warning
+
+Each fg-* repo keeps its own `compose.yml` so it can run on its own, and its
+integration tests use it. With the `cw` option, `npm run stack` compares those
+files with this repo before starting. It prints a warning when an
+infrastructure image (mongo, floci, the Entra stub, redis) has a different tag
+or `wait-for-replicaset.sh` differs from `compose/wait-for-replicaset.sh`. The
+full stack always uses this repo's versions, so the warning is about running a
+repo on its own. It never stops the stack, because a repo on a feature branch
+may differ on purpose. To check without starting anything:
+
+```bash
+node compose/check-drift.js fg-gas-backend fg-cw-backend fg-cw-frontend fg-grants-platform-admin
+```
+
 ### Setting up user access
 
 - Access the frontend and log in `http://localhost:3100`
