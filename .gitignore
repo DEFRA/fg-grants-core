@@ -1,3 +1,5 @@
 tmp
 .DS_Store
 .idea
+compose/config-broker-local
+compose/.grant-config-versions.json

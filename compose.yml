@@ -10,7 +10,14 @@ services:
       # Hostname floci puts in returned QueueUrls, so they stay reachable from
       # the host. Floci starts every service, so there is no SERVICES list.
       FLOCI_HOSTNAME: 127.0.0.1
+      # S3 is kept on the floci-data volume so it lives as long as Mongo does.
+      # The config broker records each deployed grant version in Mongo and
+      # won't upload it again, so an empty S3 next to a kept Mongo leaves
+      # grants-ui-backend without configs or allowlists. SNS and SQS stay in
+      # memory and are recreated by the init scripts on every start.
+      FLOCI_STORAGE_SERVICES_S3_MODE: persistent
     volumes:
+      - floci-data:/app/data
       # Mounted as individual files rather than as a directory, because several
       # repos add scripts to this container (see compose.config-broker.yml, and
       # grants-ui once it defines its own floci service). Compose merges volumes
@@ -26,7 +33,7 @@ services:
       - ./compose/floci/ready.d/10-core-resources.sh:/etc/floci/init/ready.d/10-core-resources.sh:ro
       - ./compose/floci/ready.d/99-ready.sh:/etc/floci/init/ready.d/99-ready.sh:ro
     healthcheck:
-      test: ["CMD", "stat", "/tmp/READY"]
+      test: ["CMD", "stat", "/tmp/FG_GRANTS_CORE_READY"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -110,6 +117,7 @@ services:
 
 volumes:
   mongodb-data:
+  floci-data:
 
 networks:
   cdp-tenant:

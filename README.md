@@ -15,7 +15,10 @@
   /farming-grants-agreements-api (optional)
   /farming-grants-agreements-ui (optional)
   /fg-gss-pmf (optional)
-  /grants-config-broker (optional)
+  /grants-config-broker (optional, only to build the broker locally)
+  /grants-config-example-grants (grant configs, including pigs-might-fly; see below)
+  /grants-config-woodland (grant configs, optional)
+  /grants-config-* (any other grant config repos, optional)
 ```
 
 ### Standard set up (same for each option)
@@ -44,7 +47,7 @@ Available options:
 | Option | Description |
 |--------|-------------|
 | `cw` | All Case Working applications including GAS and the grants platform admin app |
-| `grants-ui` | grants-ui and its dependencies |
+| `grants-ui` | grants-ui and its dependencies (needs `cw`) |
 | `agreements` | agreements-api and agreements-ui |
 | `gss-pmf` | Pigs Might Fly grant funding calculator |
 | `config-broker` | grants-config-broker (local build) |
@@ -58,7 +61,62 @@ npm run stack cw grants-ui agreements gss-pmf
 npm run stack cw grants-ui config-broker
 ```
 
-Run `npm run stack` with no arguments to see the help output.
+Flags:
+
+| Flag | Description |
+|------|-------------|
+| `--grants=<grant,...>` | Only load these grant configs (default: every local grant). Also `GRANTS=...` |
+| `--keep-grants` | Reuse the grant configs from the last run instead of rebuilding. Also `KEEP_GRANTS=1` |
+
+```bash
+npm run stack cw grants-ui --grants=woodland
+```
+
+See [Grant configs](#grant-configs) for details. Run `npm run stack` with no
+arguments to see the help output.
+
+### Grant configs
+
+Every stack runs the config broker (the pinned `defradigital/grants-config-broker`
+image). It publishes grant configs to GAS, CW and grants-ui-backend, built
+from the `grants-config-*` repos checked out alongside this one. Nothing is
+downloaded from GitHub: each grant is copied from your working copy, on
+whatever branch it is on, at the version in that repo's `package.json`.
+`grants-config-example-grants` holds pigs-might-fly and the example grants.
+
+By default every local grant is used. To run with only the grants you are
+working on:
+
+```bash
+npm run stack cw --grants=woodland
+npm run stack cw grants-ui --grants=woodland,pigs-might-fly
+GRANTS=woodland npm run stack cw
+```
+
+`--grants woodland pigs-might-fly` (with spaces) also works, but prefer `=`:
+npm swallows the flag itself, so the script has to treat every argument that
+isn't a stack option as a grant name.
+
+`--grants` only limits what the broker publishes on this run. Grants deployed
+on earlier runs stay in Mongo, so GAS and grants-ui still see them until you
+remove the volume with `docker compose down -v`.
+
+The configs are written to `compose/config-broker-local/` (gitignored) and
+rebuilt on every run, so changes in your config repos are picked up on
+restart. To reuse the configs from the last run instead, add `--keep-grants`
+(or set `KEEP_GRANTS=1`). To rebuild them without starting the stack, run
+`node compose/prepare-grant-configs.js [grant ...]`.
+
+- **Allowlists:** each gets a `local` entry copied from its `dev` entry, so a
+  grant has the same access locally as in dev.
+- **Versions:** the broker deploys each `grant@version` only once per
+  database. When a grant's files change without a version bump, it is given
+  the next patch version locally (for example `woodland@1.44.2` while the repo
+  says `1.44.1`), so the change is deployed and becomes the version in use.
+  Issued versions are tracked in `compose/.grant-config-versions.json`. If you
+  delete that file, also remove the Mongo volume (`docker compose down -v`).
+- **`config-broker` option:** builds the broker from `../grants-config-broker`
+  instead of using the pinned image, for working on the broker itself.
 
 
 ### Setting up user access
@@ -111,16 +169,23 @@ repo that mounts one in:
 | Script | Mounted by |
 |--------|------------|
 | `10-core-resources.sh` | this repo (`compose/floci/ready.d/`) |
-| `50-config-broker.sh` | `grants-config-broker`, only under the `config-broker` profile |
-| `99-ready.sh` | this repo — writes the `/tmp/READY` marker |
+| `50-config-broker.sh` | `grants-config-broker`, only with the `config-broker` option (local build) |
+| `99-ready.sh` | this repo — writes the `/tmp/FG_GRANTS_CORE_READY` marker |
 
-The container's healthcheck waits on `/tmp/READY` rather than on the gateway
-responding, because floci starts serving HTTP before the init scripts have
-finished. Services that `depends_on` floci with `condition: service_healthy`
-therefore never start before their queues exist. If you add a script, give it a
-numeric prefix below `99`.
+The container's healthcheck waits on `/tmp/FG_GRANTS_CORE_READY` rather than on
+the gateway responding, because floci starts serving HTTP before the init
+scripts have finished. Services that `depends_on` floci with
+`condition: service_healthy` therefore never start before their queues exist.
+The marker has its own name because grants-ui's `start.d` scripts write
+`/tmp/READY`, and floci runs every `start.d` script before any `ready.d` one. If
+you add a script, give it a numeric prefix below `99`.
 
-State is in-memory: every `compose up` recreates the resources from scratch.
+SNS and SQS are in-memory: every `compose up` recreates the queues and topics
+from scratch. S3 is kept on the `floci-data` volume, so it lives as long as the
+Mongo data does. The config broker records the grant versions it has uploaded
+in Mongo and won't upload them again, so the two must be cleared together:
+`docker compose down -v` removes both. If you remove one volume by hand, remove
+the other too.
 
 #### Inspecting queues and topics
 

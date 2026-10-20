@@ -1,10 +1,25 @@
 services:
   floci:
+    # grants-ui's compose.infra.yml defines floci with an unpinned image; this
+    # file merges last, so it keeps the stack on core's pinned version.
+    image: floci/floci:1.5.33-compat
     env_file:
       - ../fg-grants-core/compose/aws.env
+    # Repeated from compose.yml so grants-ui's floci definition can't drop it.
+    environment:
+      FLOCI_STORAGE_SERVICES_S3_MODE: persistent
     volumes:
+      - floci-data:/app/data
       - ../fg-grants-core/compose/floci/ready.d/10-core-resources.sh:/etc/floci/init/ready.d/10-core-resources.sh:ro
       - ../fg-grants-core/compose/floci/ready.d/99-ready.sh:/etc/floci/init/ready.d/99-ready.sh:ro
+    # grants-ui's compose file sets a healthcheck on /tmp/READY, which its own
+    # scripts write before core's resources exist (see ready.d/99-ready.sh).
+    healthcheck:
+      test: ["CMD", "stat", "/tmp/FG_GRANTS_CORE_READY"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
     networks:
       - cdp-tenant
 
@@ -225,9 +240,25 @@ services:
     networks:
       - cdp-tenant
 
+  # Runs in every stack: it publishes the grant configs that GAS, CW and
+  # grants-ui-backend read, built by start-stack.js from the local
+  # grants-config-* repos. grants-ui's compose file also defines this service
+  # (unpinned, always pulled, with its own config folder); this file merges
+  # last, so the settings below win. The config-broker option swaps the image
+  # for a local build (compose.config-broker.yml).
   grants-config-broker:
-    profiles:
-      - config-broker
+    image: defradigital/grants-config-broker:0.48.2
+    pull_policy: missing
+    ports:
+      - "3012:3012"
+    volumes:
+      - ${CONFIG_BROKER_PACKAGES_DIR:-./compose/config-broker-local}:/home/node/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:3012/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     networks:
       - cdp-tenant
     depends_on:
@@ -238,6 +269,7 @@ services:
       floci:
         condition: service_healthy
     environment:
+      SERVICE_VERSION: ${CONFIG_BROKER_SERVICE_VERSION}
       PORT: 3012
       MONGO_URI: mongodb://mongodb:27017/
       MONGO_DATABASE: grants-config-broker
