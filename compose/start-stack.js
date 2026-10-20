@@ -33,6 +33,12 @@ const options = {
     localTargets: ["config-broker"],
     profiles: [],
   },
+  "entra-users": {
+    description:
+      "give readerwriter@t.gov.uk every case working and grants platform admin role",
+    targets: ["entra-users"],
+    profiles: [],
+  },
 };
 
 function unique(items) {
