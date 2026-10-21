@@ -2,15 +2,23 @@ const {
   prepareGrantConfigs,
   existingOrPrepareGrantConfigs,
 } = require("./prepare-grant-configs");
+const { printDriftWarning } = require("./check-drift");
 
 // The config broker isn't an option: it runs in every stack (see
 // compose.override.yml). `localTargets` are overlays added after
-// compose.override.yml, so they can replace what it sets.
+// compose.override.yml, so they can replace what it sets. `fgRepos` are the
+// sibling fg-* repos an option runs, checked for infrastructure drift.
 const options = {
   cw: {
     description: "all Case Working applications including gas",
     targets: ["gas", "cw-backend", "cw-frontend", "platform-admin"],
     profiles: [],
+    fgRepos: [
+      "fg-gas-backend",
+      "fg-cw-backend",
+      "fg-cw-frontend",
+      "fg-grants-platform-admin",
+    ],
   },
   "grants-ui": {
     description: "grants-ui and its dependencies (needs cw)",
@@ -129,6 +137,8 @@ function main() {
     );
     process.exit(1);
   }
+
+  printDriftWarning(args.flatMap((arg) => options[arg].fgRepos || []));
 
   const overrides =
     args.includes("cw") ||

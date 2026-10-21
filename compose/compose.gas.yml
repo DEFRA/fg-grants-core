@@ -1,3 +1,12 @@
 include:
   - path: ../fg-gas-backend/compose/compose.gas.yml
     project_directory: ../fg-gas-backend
+
+services:
+  floci:
+    volumes:
+      # fg-gas-backend creates its own queues and topics. Mounted as a single
+      # file into ready.d, so it runs after core's 10-core-resources.sh and
+      # before 99-ready.sh writes the marker the floci healthcheck waits on.
+      # gas's own 99-ready.sh is not mounted: this stack owns the marker.
+      - ../fg-gas-backend/compose/floci/start.d/10-setup-resources.sh:/etc/floci/init/ready.d/20-gas-resources.sh:ro

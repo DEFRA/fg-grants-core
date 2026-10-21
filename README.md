@@ -119,6 +119,21 @@ restart. To reuse the configs from the last run instead, add `--keep-grants`
   instead of using the pinned image, for working on the broker itself.
 
 
+### Infrastructure drift warning
+
+Each fg-* repo keeps its own `compose.yml` so it can run on its own, and its
+integration tests use it. With the `cw` option, `npm run stack` compares those
+files with this repo before starting. It prints a warning when an
+infrastructure image (mongo, floci, the Entra stub, redis) has a different tag
+or `wait-for-replicaset.sh` differs from `compose/wait-for-replicaset.sh`. The
+full stack always uses this repo's versions, so the warning is about running a
+repo on its own. It never stops the stack, because a repo on a feature branch
+may differ on purpose. To check without starting anything:
+
+```bash
+node compose/check-drift.js fg-gas-backend fg-cw-backend fg-cw-frontend fg-grants-platform-admin
+```
+
 ### Setting up user access
 
 - Access the frontend and log in `http://localhost:3100`
@@ -168,9 +183,18 @@ repo that mounts one in:
 
 | Script | Mounted by |
 |--------|------------|
-| `10-core-resources.sh` | this repo (`compose/floci/ready.d/`) |
+| `10-core-resources.sh` | this repo (`compose/floci/ready.d/`) — resources for the non-fg services (agreements, payments, audit, config broker) |
+| `20-gas-resources.sh` | `fg-gas-backend`'s own setup script, with the `cw` option |
+| `21-cw-resources.sh` | `fg-cw-backend`'s own setup script, with the `cw` option |
 | `50-config-broker.sh` | `grants-config-broker`, only with the `config-broker` option (local build) |
 | `99-ready.sh` | this repo — writes the `/tmp/FG_GRANTS_CORE_READY` marker |
+
+Each fg backend creates its own queues and topics, so a new queue goes in that
+backend's `compose/floci/start.d/10-setup-resources.sh`, not here. Several
+scripts create the same queue or topic (for example a GAS topic feeding a CW
+queue), so they must use the same attributes: floci refuses a queue created
+again with different attributes, and silently keeps the first attributes for a
+topic.
 
 The container's healthcheck waits on `/tmp/FG_GRANTS_CORE_READY` rather than on
 the gateway responding, because floci starts serving HTTP before the init
