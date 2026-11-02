@@ -1,0 +1,6 @@
+services:
+  entra:
+    volumes:
+      # Swaps the stub's built in users for compose/entra-users.js, where
+      # readerwriter@t.gov.uk also holds both grants platform admin roles.
+      - ./compose/entra-users.js:/home/node/src/server/common/users.js:ro

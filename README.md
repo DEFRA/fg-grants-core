@@ -51,6 +51,7 @@ Available options:
 | `agreements` | agreements-api and agreements-ui |
 | `gss-pmf` | Pigs Might Fly grant funding calculator |
 | `config-broker` | grants-config-broker (local build) |
+| `entra-users` | Replace the Entra stub's users with `compose/entra-users.js`, so `readerwriter@t.gov.uk` also has both grants platform admin roles |
 
 Options can be combined:
 
@@ -59,6 +60,7 @@ npm run stack cw grants-ui
 npm run stack cw grants-ui agreements
 npm run stack cw grants-ui agreements gss-pmf
 npm run stack cw grants-ui config-broker
+npm run stack cw entra-users
 ```
 
 Flags:
