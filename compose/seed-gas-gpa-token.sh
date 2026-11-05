@@ -9,8 +9,8 @@ echo "Seeding GAS access token for fg-grants-platform-admin into $MONGO_DATABASE
 
 mongosh "mongodb://$MONGO_HOST/$MONGO_DATABASE?directConnection=true" --eval "
   db.access_tokens.updateOne(
-    { client: 'fg-grants-platform-admin' },
-    { \$set: { id: '$TOKEN_HASH', client: 'fg-grants-platform-admin', clientId: 'fg-grants-platform-admin', expiresAt: null } },
+    { id: '$TOKEN_HASH' },
+    { \$setOnInsert: { client: 'fg-grants-platform-admin', clientId: 'fg-grants-platform-admin', expiresAt: null, createdAt: new Date() } },
     { upsert: true }
   );
   print('Token seeded for fg-grants-platform-admin with hash ${TOKEN_HASH}.');

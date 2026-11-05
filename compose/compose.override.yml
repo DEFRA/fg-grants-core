@@ -120,8 +120,8 @@ services:
       CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
       ENVIRONMENT: ${ENVIRONMENT:-local}
       CW_BACKEND_URL: http://fg-cw-backend:3101
-      # The raw local token for GAS to call fg-cw-backend; fg-cw-backend seeds
-      # its hash from SERVICE_ACCESS_TOKEN_HASH below.
+      # The raw local token for GAS to call fg-cw-backend; cw-seed-token below
+      # writes its hash to fg-cw-backend's access_tokens.
       CW_BACKEND_TOKEN: 9c05f401-94eb-4e95-8b98-111a2048f4c2
 
   fg-cw-backend:
@@ -129,9 +129,13 @@ services:
       CONFIG_BROKER_S3_BUCKET: configs-bucket
       CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
       ENVIRONMENT: ${ENVIRONMENT:-local}
-      # Seeded on boot so GAS can call the CW roles endpoint.
-      # Raw token (gas: CW_BACKEND_TOKEN): 9c05f401-94eb-4e95-8b98-111a2048f4c2
-      SERVICE_ACCESS_TOKEN_HASH: fg-gas-backend:919da0b26f9260ad69fd6a57a71df612d4fb556ccb8628c7a8e18f7e0e718572
+    # fg-cw-backend applies its migrations before it starts listening, so a
+    # healthy /health means they have run.
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:3101/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 60
 
   fg-cw-frontend:
     environment:
@@ -161,6 +165,28 @@ services:
     volumes:
       - ./compose/seed-gas-gpa-token.sh:/seed-gas-gpa-token.sh:ro
     entrypoint: ["/bin/bash", "/seed-gas-gpa-token.sh"]
+    restart: "no"
+
+  # Seeds a dev token into fg-cw-backend so GAS can call its actuators and
+  # roles endpoint (which require client = 'fg-gas-backend').
+  # Raw token (gas: CW_BACKEND_TOKEN): 9c05f401-94eb-4e95-8b98-111a2048f4c2
+  cw-seed-token:
+    image: mongo:7.0
+    container_name: cw-seed-token
+    networks:
+      - cdp-tenant
+    depends_on:
+      mongo-ready:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      fg-cw-backend:
+        condition: service_healthy
+    environment:
+      TOKEN_HASH: 919da0b26f9260ad69fd6a57a71df612d4fb556ccb8628c7a8e18f7e0e718572
+    volumes:
+      - ./compose/seed-cw-token.sh:/seed-cw-token.sh:ro
+    entrypoint: ["/bin/bash", "/seed-cw-token.sh"]
     restart: "no"
 
   # Seeds the pre-minted dev token hash so grants-ui can authenticate with GAS
