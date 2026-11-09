@@ -58,8 +58,6 @@ services:
       GRANTS_UI_BACKEND_URL: http://grants-ui-backend:3001
       GRANTS_UI_BACKEND_AUTH_TOKEN: auth_token
       GRANTS_UI_BACKEND_ENCRYPTION_KEY: encryption_key
-      CV_API_MOCK_ENABLED: true
-      CV_API_STUB_URL: http://grants-ui-dal-stub:3008/graphql
       GAS_API_URL: http://gas:3102
       GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
 
@@ -85,7 +83,13 @@ services:
       AUTH_OVERRIDE: ""
       AUTH_OVERRIDE_FILE: users.json
 
-  grants-ui-dal-stub:
+  grants-platform-dal-stub:
+    profiles:
+      - grants-ui
+    networks:
+      - cdp-tenant
+
+  land-grants-backend:
     profiles:
       - grants-ui
     networks:
@@ -115,6 +119,15 @@ services:
   gas:
     environment:
       GRANT_FUNDING_CALCULATOR_URL: http://fg-gss-pmf:3001
+      # Woodland's agreement definition calls land-grants for its agreement
+      # dates. land-grants-backend only runs with the grants-ui option.
+      LAND_GRANTS_URL: http://land-grants-backend:3009
+      # Same shape as cdp-app-config's LAND_GRANTS_HEADERS. land-grants expects
+      # its auth token encrypted with its encryption key, so this is the local
+      # LAND_GRANTS_AUTH_TOKEN encrypted with the local LAND_GRANTS_ENCRYPTION_KEY
+      # (grants-ui's encryptToken, then base64). $$ stops compose substituting it.
+      LAND_GRANTS_HEADERS: "Authorization: Bearer $${LAND_GRANTS_TOKEN}"
+      LAND_GRANTS_TOKEN: ZTVVRFFKRkNIM0xkUFQ0bTpQVktZY21jc0VwRk0xa2d4OVhJay9nPT06MmRBc0VFb2k4UlNzRXc9PQ==
       # The bucket the config broker deploys to in this stack.
       CONFIG_BROKER_S3_BUCKET: configs-bucket
       CONFIGURATION_VARIANT: ${CONFIGURATION_VARIANT:-}
@@ -220,6 +233,14 @@ services:
       - agreements
     networks:
       - cdp-tenant
+    environment:
+      # Verifies the caller token grants-ui signs, so it must match
+      # grants-ui's AGREEMENTS_JWT_SECRET above.
+      AGREEMENTS_JWT_SECRET: a-string-secret-at-least-256-bits-long
+      GAS_BACKEND_URL: http://gas:3102
+      # GAS has no token seeded for agreements-ui locally, so it reuses
+      # grants-ui's (see gas-seed-token).
+      GAS_API_AUTH_TOKEN: f081263c-6876-4d40-936f-ebdf63b5e893
 
   # Runs in every stack: it publishes the grant configs that GAS, CW and
   # grants-ui-backend read, built by start-stack.js from the local
