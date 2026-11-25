@@ -53,13 +53,12 @@ function processTargets(targets) {
   }, "");
 }
 
-function printOverrides(configs, override, localConfigs) {
-  const returnString = configs.join("");
-  if (override)
-    return (
-      returnString + " -f compose/compose.override.yml" + localConfigs.join("")
-    );
-  return returnString;
+function printOverrides(configs, localConfigs) {
+  return (
+    configs.join("") +
+    " -f compose/compose.override.yml" +
+    localConfigs.join("")
+  );
 }
 
 function printProfiles(configs) {
@@ -140,13 +139,6 @@ function main() {
 
   printDriftWarning(args.flatMap((arg) => options[arg].fgRepos || []));
 
-  const overrides =
-    args.includes("cw") ||
-    args.includes("config-broker") ||
-    args.includes("grants-ui") ||
-    args.includes("agreements") ||
-    args.includes("gss-pmf");
-
   const configs = args.reduce(
     (acc, arg) => {
       const app = options[arg];
@@ -163,7 +155,7 @@ function main() {
   );
 
   const { spawn } = require("child_process");
-  const cmd = `docker compose -f compose.yml ${printOverrides(configs.overlays, overrides, configs.localOverlays)}${printProfiles(configs.profiles)} up --build --watch`;
+  const cmd = `docker compose -f compose.yml ${printOverrides(configs.overlays, configs.localOverlays)}${printProfiles(configs.profiles)} up --build --watch`;
 
   // The config broker serves grant configs built from the local
   // grants-config-* repos, rebuilt on every run unless --keep-grants is set
